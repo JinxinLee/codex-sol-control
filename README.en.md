@@ -12,9 +12,13 @@
 - **Terra High** is the complex execution tier: cross-module work, long-context investigation, ambiguous debugging, shared interfaces, and high-risk implementation.
 - **Luna Max** is the lightweight execution tier: clear, low-ambiguity, tightly bounded, independently verifiable work.
 
-Simple tasks stay with the current Codex session. Explicitly invoke `$sol-control` for work that is complex, cross-module, parallelizable, or high-consequence.
+Simple tasks stay with the current Codex session. Explicitly invoke `$sol-control` when Sol
+should control tiered execution; invoke `$sol-luna` when every delegated execution task must
+use Luna Max.
 
-> **v0.4.x compatibility:** the old `$sol-luna` command remains available for explicit invocation, but only redirects to `$sol-control`; it does not start a second orchestration flow. Use `$sol-control` for new configuration. The alias is scheduled for removal in v0.5.0.
+> **Two explicit modes:** `$sol-control` uses tiered Luna Max and Terra High routing; `$sol-luna`
+> uses Luna Max only. For complex work, the Luna-only mode first decomposes and re-plans within
+> the original authorization into bounded Luna tasks instead of dispatching Terra automatically.
 
 Runtime output defaults to Simplified Chinese unless the user explicitly requests another language.
 
@@ -368,7 +372,7 @@ These statements describe the recorded evidence boundary; they do not infer supp
 │  └─ references/
 │     ├─ orchestration.md      orchestration contract
 │     └─ runtime-notes.md      runtime and dispatch notes
-└─ sol-luna/                   thin v0.4.x compatibility alias
+└─ sol-luna/                   formal thin Luna-only specialization
 
 .codex/agents/
 ├─ sol-controller.toml

@@ -321,14 +321,16 @@ function Assert-Source {
     $compatSkill = Get-Content -LiteralPath (Join-Path $compatSkillRoot "SKILL.md") -Raw
     if ($compatSkill -notmatch "(?m)^name:\s*sol-luna\s*$" -or
         $compatSkill -notmatch '\$sol-luna' -or
-        $compatSkill -notmatch '\$sol-control' -or
-        $compatSkill -notmatch 'v0\.5\.0' -or
+        $compatSkill -notmatch '(?i)inherits.{0,120}\$sol-control' -or
+        $compatSkill -notmatch '(?i)Terra High is unavailable|Terra High.*不可用' -or
+        $compatSkill -notmatch '(?i)delegated.{0,100}Luna Max|委派.{0,100}Luna Max' -or
+        $compatSkill -notmatch '(?i)decompos.{0,120}re-plan|拆分.{0,120}re-plan' -or
         @($compatSkill -split "`r?`n").Count -gt 45) {
         throw "source validation failed"
     }
     $compatOpenai = Get-Content -LiteralPath (Join-Path $compatSkillRoot "agents/openai.yaml") -Raw
     if ($compatOpenai -notmatch '\$sol-luna' -or
-        $compatOpenai -notmatch '\$sol-control' -or
+        $compatOpenai -notmatch '(?i)Luna Max' -or
         $compatOpenai -notmatch '(?m)^\s*allow_implicit_invocation:\s*false\s*$') {
         throw "source validation failed"
     }

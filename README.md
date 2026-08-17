@@ -12,9 +12,12 @@
 - **Terra High** 是复杂执行层：处理跨模块、长上下文、模糊调试、共享接口与高风险实现。
 - **Luna Max** 是轻量执行层：承接清晰、低歧义、边界明确、可独立验证的任务。
 
-简单任务仍由当前 Codex 直接完成。复杂、跨模块、可并行或高风险任务，再显式调用 `$sol-control`。
+简单任务仍由当前 Codex 直接完成。需要 Sol 统一规划和审核时，显式调用 `$sol-control`；
+如果所有委派执行都必须使用 Luna Max，则显式调用 `$sol-luna`。
 
-> **v0.4.x 兼容说明：**旧命令 `$sol-luna` 仍可显式调用，但它只会转交给 `$sol-control`，不会启动第二套编排流程。新配置请使用 `$sol-control`；兼容入口计划在 v0.5.0 移除。
+> **两个显式模式：**`$sol-control` 使用 Luna Max 与 Terra High 的分层路由；`$sol-luna`
+> 只使用 Luna Max。后者遇到复杂任务时，会在原授权范围内优先拆分并 re-plan 为有界
+> Luna 任务，不会自动调用 Terra。
 
 运行时默认使用简体中文；如果用户明确指定其他语言，则遵循用户选择。
 
@@ -368,7 +371,7 @@ v0.4.1 修复了 Desktop 子 Agent 无法观察模型和 reasoning effort 时的
 │  └─ references/
 │     ├─ orchestration.md      编排契约
 │     └─ runtime-notes.md      运行时与调度说明
-└─ sol-luna/                   v0.4.x 薄兼容入口
+└─ sol-luna/                   正式的薄 Luna-only specialization
 
 .codex/agents/
 ├─ sol-controller.toml

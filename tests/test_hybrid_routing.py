@@ -25,7 +25,9 @@ except ModuleNotFoundError as exc:  # pragma: no cover - old runner guard
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL_ROOT = ROOT / ".agents" / "skills" / "sol-control"
+LUNA_SKILL_ROOT = ROOT / ".agents" / "skills" / "sol-luna"
 TERRA_AGENT = ROOT / ".codex" / "agents" / "terra-high-worker.toml"
+SOL_AGENT = ROOT / ".codex" / "agents" / "sol-controller.toml"
 FORWARD_CASES = ROOT / "tests" / "fixtures" / "forward-cases.json"
 README_FILES = (ROOT / "README.md", ROOT / "README.en.md")
 CONTRACT_DOCS = (
@@ -171,6 +173,28 @@ class TerraAgentContractTests(unittest.TestCase):
             r"(?is)identity(?:-only)?\s+handshake.{0,360}(?:no|without).{0,120}"
             r"(?:task execution|planning).{0,120}(?:write|writing)",
         )
+
+
+class LunaOnlySpecializationContractTests(unittest.TestCase):
+    def test_sol_luna_inherits_base_and_overrides_only_worker_routing(self) -> None:
+        specialization = compact(
+            "\n".join(read_text(path) for path in LUNA_SKILL_ROOT.rglob("*") if path.is_file())
+        )
+        self.assertTrue(specialization, LUNA_SKILL_ROOT)
+        self.assertRegex(specialization, r"(?is)inherits.{0,120}\$sol-control")
+        self.assertRegex(specialization, r"(?i)Terra High is unavailable|Terra High.{0,80}不可用")
+        self.assertRegex(specialization, r"(?i)delegated.{0,100}Luna Max|委派.{0,100}Luna Max")
+        self.assertRegex(specialization, r"(?i)decompos.{0,120}re-plan|拆分.{0,120}re-plan")
+        self.assertRegex(specialization, r"(?i)BLOCKED.{0,180}(?:decomposition|拆分)")
+        self.assertNotIn("v0.5.0", specialization)
+        self.assertNotRegex(specialization, r"(?i)compatibility alias|scheduled for removal")
+
+    def test_sol_control_keeps_terra_available_globally(self) -> None:
+        controller = compact(read_text(SOL_AGENT))
+        base = compact(read_text(SKILL_ROOT / "SKILL.md"))
+        self.assertRegex(controller, r"(?i)Terra High")
+        self.assertRegex(controller, r"(?i)Route.{0,80}Terra|Terra.{0,80}cross-module")
+        self.assertRegex(base, r"(?i)Route to.{0,120}Terra High")
 
 
 class LifecycleContractTests(unittest.TestCase):

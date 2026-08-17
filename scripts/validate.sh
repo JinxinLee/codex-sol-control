@@ -111,11 +111,13 @@ fi
 
 if [[ -f "$COMPAT_SKILL_FILE" ]]; then
   if ! grep -Eq '^name:[[:space:]]*sol-luna[[:space:]]*$' "$COMPAT_SKILL_FILE"; then
-    fail 'compatibility SKILL.md has the wrong name'
+    fail 'sol-luna specialization SKILL.md has the wrong name'
   fi
-  [[ "$(wc -l < "$COMPAT_SKILL_FILE" | tr -d ' ')" -le 45 ]] || fail 'compatibility SKILL.md is not thin'
-  grep -Fq '$sol-control' "$COMPAT_SKILL_FILE" || fail 'compatibility SKILL.md does not redirect to $sol-control'
-  grep -Fq 'v0.5.0' "$COMPAT_SKILL_FILE" || fail 'compatibility SKILL.md has no removal milestone'
+  [[ "$(wc -l < "$COMPAT_SKILL_FILE" | tr -d ' ')" -le 45 ]] || fail 'sol-luna specialization SKILL.md is not thin'
+  grep -Eiq 'inherits.{0,120}\$sol-control' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not inherit $sol-control'
+  grep -Eiq 'Terra High is unavailable|Terra High.{0,80}不可用' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not disable Terra'
+  grep -Eiq 'delegated.{0,100}Luna Max|委派.{0,100}Luna Max' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not require Luna'
+  grep -Eiq 'decompos.{0,120}re-plan|拆分.{0,120}re-plan' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization lacks complex-task decomposition'
 fi
 
 if [[ -f "$OPENAI_FILE" ]]; then
@@ -134,7 +136,7 @@ if [[ -f "$OPENAI_FILE" ]]; then
 fi
 if [[ -f "$COMPAT_OPENAI_FILE" ]]; then
   grep -Fq '$sol-luna' "$COMPAT_OPENAI_FILE" || fail 'compatibility openai.yaml has the wrong invocation'
-  grep -Fq '$sol-control' "$COMPAT_OPENAI_FILE" || fail 'compatibility openai.yaml does not redirect to $sol-control'
+  grep -Eiq 'Luna Max' "$COMPAT_OPENAI_FILE" || fail 'sol-luna openai.yaml does not identify Luna Max'
   grep -Eq 'allow_implicit_invocation:[[:space:]]*false' "$COMPAT_OPENAI_FILE" || fail 'compatibility openai.yaml permits implicit invocation'
 fi
 
@@ -332,11 +334,13 @@ if len(compat_skill_text.splitlines()) > 45:
     fail()
 if not re.search(r"(?m)^name:\s*sol-luna\s*$", compat_skill_text):
     fail()
-for marker in ("$sol-luna", "$sol-control", "v0.5.0"):
+for marker in ("$sol-luna", "$sol-control", "Terra High is unavailable", "Luna Max", "re-plan"):
     if marker not in compat_skill_text:
         fail()
+if not re.search(r"(?is)inherits.{0,120}\$sol-control", compat_skill_text):
+    fail()
 compat_openai_text = read_text(compat_openai_file)
-for marker in ("$sol-luna", "$sol-control", "allow_implicit_invocation: false"):
+for marker in ("$sol-luna", "Luna Max", "allow_implicit_invocation: false"):
     if marker not in compat_openai_text:
         fail()
 
@@ -549,12 +553,16 @@ raise if compat_closing.nil?
 compat_skill = load_yaml(compat_lines[1, compat_closing].join)
 raise unless compat_skill.is_a?(Hash) && compat_skill["name"] == "sol-luna"
 compat_text = compat_lines.join
-%w[$sol-luna $sol-control v0.5.0].each { |marker| raise unless compat_text.include?(marker) }
+%w[$sol-luna $sol-control].each { |marker| raise unless compat_text.include?(marker) }
+raise unless compat_text.match?(/inherits.{0,120}\$sol-control/i)
+raise unless compat_text.match?(/Terra High is unavailable|Terra High.{0,80}不可用/i)
+raise unless compat_text.match?(/delegated.{0,100}Luna Max|委派.{0,100}Luna Max/i)
+raise unless compat_text.match?(/decompos.{0,120}re-plan|拆分.{0,120}re-plan/i)
 
 compat_openai = load_yaml(File.read(compat_openai_path, encoding: "UTF-8"))
 raise unless compat_openai.dig("policy", "allow_implicit_invocation") == false
 compat_prompt = compat_openai.dig("interface", "default_prompt")
-raise unless compat_prompt.is_a?(String) && compat_prompt.include?("$sol-luna") && compat_prompt.include?("$sol-control")
+raise unless compat_prompt.is_a?(String) && compat_prompt.include?("$sol-luna") && compat_prompt.match?(/Luna Max/i)
 
 [bug_template_path, feature_template_path].each do |path|
   form = load_yaml(File.read(path, encoding: "UTF-8"))

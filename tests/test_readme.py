@@ -807,7 +807,6 @@ class ReadmeContractTests(unittest.TestCase):
             "Compatibility",
             "Native Nested",
             "SOL_CONTROL_IMPLEMENTATION_REPORT.md",
-            "v0.5.0",
             "CONTRIBUTING.md",
             "CODE_OF_CONDUCT.md",
             "SECURITY.md",

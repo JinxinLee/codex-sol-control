@@ -1,6 +1,6 @@
 interface:
-  display_name: "Sol Luna (compatibility)"
-  short_description: "Temporary compatibility alias for Sol Control."
-  default_prompt: "使用旧入口 $sol-luna 执行任务，并迁移到 $sol-control。"
+  display_name: "Sol Luna"
+  short_description: "Sol-controlled execution using Luna Max only."
+  default_prompt: "使用 $sol-luna，由 Sol 负责规划和审核，所有委派执行任务只使用 Luna Max。"
 policy:
   allow_implicit_invocation: false

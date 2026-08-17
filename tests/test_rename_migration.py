@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""v0.4.0 Sol Control rename and compatibility contracts."""
+"""Sol Control names, lifecycle, and personal-mode contracts."""
 
 from __future__ import annotations
 
@@ -43,17 +43,30 @@ class RenameMigrationContractTests(unittest.TestCase):
             self.assertRegex(text, r"(?is)identity(?:-only)?\s+handshake")
             self.assertRegex(text, r"(?is)(?:no|without).{0,100}(?:task execution|planning).{0,100}(?:write|writing)")
 
-    def test_sol_luna_is_a_thin_one_release_compatibility_alias(self) -> None:
-        alias = read(COMPAT_SKILL / "SKILL.md")
+    def test_sol_luna_is_a_thin_luna_only_specialization(self) -> None:
+        specialization = read(COMPAT_SKILL / "SKILL.md")
         metadata = read(COMPAT_SKILL / "agents" / "openai.yaml")
 
-        self.assertLessEqual(len(alias.splitlines()), 45)
-        self.assertRegex(alias, r"(?m)^name:\s*sol-luna\s*$")
-        self.assertIn("$sol-luna", alias)
-        self.assertIn("$sol-control", alias)
-        self.assertRegex(alias, r"(?i)compatib|兼容")
-        self.assertIn("v0.5.0", alias)
+        self.assertLessEqual(len(specialization.splitlines()), 45)
+        self.assertRegex(specialization, r"(?m)^name:\s*sol-luna\s*$")
+        self.assertIn("$sol-luna", specialization)
+        self.assertRegex(specialization, r"(?is)inherits.{0,120}\$sol-control")
+        self.assertRegex(specialization, r"(?i)Terra High is unavailable|Terra High.{0,80}不可用")
+        self.assertRegex(specialization, r"(?i)delegated.{0,100}Luna Max|委派.{0,100}Luna Max")
+        self.assertRegex(specialization, r"(?i)decompos.{0,120}re-plan|拆分.{0,120}re-plan")
+        self.assertNotIn("v0.5.0", specialization)
+        self.assertNotRegex(specialization, r"(?i)compatibility alias|scheduled for removal|redirect(?:s|ed)? to")
+        self.assertIn('display_name: "Sol Luna"', metadata)
+        self.assertIn("Luna Max", metadata)
         self.assertRegex(metadata, r"(?m)^\s*allow_implicit_invocation:\s*false\s*$")
+
+    def test_public_readmes_publish_both_explicit_modes(self) -> None:
+        for relative in ("README.md", "README.en.md"):
+            text = read(ROOT / relative)
+            self.assertIn("$sol-control", text, relative)
+            self.assertIn("$sol-luna", text, relative)
+            self.assertRegex(text, r"(?i)Luna-only|Luna.only|Luna-only|仅.*Luna")
+            self.assertNotRegex(text, r"(?i)scheduled for removal in v0\.5\.0|计划在 v0\.5\.0 移除")
 
     def test_public_readmes_publish_the_new_identity_and_version(self) -> None:
         for relative in ("README.md", "README.en.md"):

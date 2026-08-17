@@ -95,7 +95,7 @@ permission may not be silently substituted.
 ```text
 .agents/skills/
   sol-control/                 canonical full Skill
-  sol-luna/                    thin v0.4.x compatibility alias
+  sol-luna/                    thin personal Luna-only specialization
 .codex/agents/
   sol-controller.toml
   terra-high-worker.toml
@@ -109,13 +109,14 @@ README.md / README.en.md
 NOTICE / LICENSE
 ```
 
-The old `$sol-luna` entry is explicit-only, redirects to `$sol-control`, and is scheduled for
-removal in v0.5.0. It does not contain or start a second orchestration implementation.
+The personal `$sol-luna` entry is explicit-only and inherits the `$sol-control` contract with a
+single routing override: Terra High is unavailable and every delegated execution task uses Luna
+Max. It does not contain or start a second orchestration implementation.
 
 ## 8. Installation and backup result
 
 The v0.4 installer uses state version 3 under `~/.codex/sol-control`. It installs the canonical
-Skill and the thin compatibility alias separately, hashes both, and preserves unrelated agents and
+Skill and the thin Luna-only specialization separately, hashes both, and preserves unrelated agents and
 the complete `config.toml`.
 
 Migration inputs are:
@@ -178,7 +179,7 @@ The installer never changes the complete Codex configuration and never silently 
 ## 13. Fresh-session discovery
 
 PASS. A fresh `codex exec` session discovered `$sol-control`, loaded Chinese as the default language,
-kept `$sol-luna` as an explicit-only v0.4.x compatibility alias, and preserved disabled implicit
+kept `$sol-luna` as an explicit-only Luna-only specialization, and preserved disabled implicit
 invocation. A separate persistent session completed the Native Nested Sol-to-Luna acceptance run.
 
 ## 14. GitHub commit and version
@@ -198,11 +199,12 @@ annotated `v0.4.0` tag is created after this final evidence update.
 - Hosted Windows runners do not prove physical Windows 11 behavior.
 - Terra High was not freshly invoked in the rename acceptance run; its TOML and lifecycle surfaces
   are covered by local and hosted validation.
-- `$sol-luna` is temporary compatibility and will be removed in v0.5.0.
+- `$sol-luna` remains a personal Luna-only mode; complex tasks must be decomposed or re-planned
+  into bounded Luna work before execution.
 
 ## 16. Follow-up recommendations
 
 - collect anonymized, matched route/token/time observations for cost and latency calibration;
 - run the same v0.4 tag on a physical Windows 11 machine and retain non-sensitive evidence;
-- remove the compatibility alias in v0.5.0 after a documented deprecation window;
+- keep the `$sol-luna` specialization thin so future `$sol-control` contract updates remain shared;
 - keep README status tied to real commits and hosted run URLs instead of reusing older evidence.

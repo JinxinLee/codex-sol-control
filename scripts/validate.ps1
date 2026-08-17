@@ -384,14 +384,21 @@ $compatSkillRoot = Join-Path $repoRoot ".agents/skills/sol-luna"
 Assert-PlainTree $compatSkillRoot
 $compatSkillText = Read-Utf8Text (Join-Path $compatSkillRoot "SKILL.md")
 if (@($compatSkillText -split "`r?`n").Count -gt 45) {
-    throw "Validation: compatibility SKILL.md is not thin"
+    throw "Validation: sol-luna specialization SKILL.md is not thin"
 }
-foreach ($pattern in @('(?m)^name:\s*sol-luna\s*$', '\$sol-luna', '\$sol-control', 'v0\.5\.0')) {
-    Assert-Regex $compatSkillText $pattern "compatibility SKILL.md is incomplete"
+foreach ($pattern in @(
+    '(?m)^name:\s*sol-luna\s*$',
+    '\$sol-luna',
+    '(?i)inherits.{0,120}\$sol-control',
+    '(?i)Terra High is unavailable|Terra High.*不可用',
+    '(?i)delegated.{0,100}Luna Max|委派.{0,100}Luna Max',
+    '(?i)decompos.{0,120}re-plan|拆分.{0,120}re-plan'
+)) {
+    Assert-Regex $compatSkillText $pattern "sol-luna specialization is incomplete"
 }
 $compatOpenaiText = Read-Utf8Text (Join-Path $compatSkillRoot "agents/openai.yaml")
-foreach ($pattern in @('\$sol-luna', '\$sol-control', '(?m)^\s*allow_implicit_invocation:\s*false\s*$')) {
-    Assert-Regex $compatOpenaiText $pattern "compatibility openai.yaml is incomplete"
+foreach ($pattern in @('\$sol-luna', '(?i)Luna Max', '(?m)^\s*allow_implicit_invocation:\s*false\s*$')) {
+    Assert-Regex $compatOpenaiText $pattern "sol-luna openai.yaml is incomplete"
 }
 
 $solPath = Join-Path $repoRoot ".codex/agents/sol-controller.toml"
