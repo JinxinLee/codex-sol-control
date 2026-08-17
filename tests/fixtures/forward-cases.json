@@ -97,8 +97,63 @@
     ]
   },
   {
+    "id": "sol-luna-bounded-file-luna-only",
+    "prompt": "$sol-luna: modify one bounded file and verify it.",
+    "expected": {
+      "route": "sol_then_luna",
+      "mode": "luna_only",
+      "sol": "required",
+      "luna": "required",
+      "terra": "blocked",
+      "review": "PASS",
+      "capacity": "live"
+    },
+    "required_assertions": [
+      "invoking mode is luna_only",
+      "Terra is unavailable",
+      "the bounded task is delegated to Luna Max",
+      "Sol performs final review"
+    ]
+  },
+  {
+    "id": "sol-luna-complex-decomposes-to-luna",
+    "prompt": "$sol-luna: perform a cross-module implementation with shared interfaces.",
+    "expected": {
+      "route": "sol_then_luna",
+      "mode": "luna_only",
+      "sol": "required",
+      "luna": "required",
+      "terra": "blocked",
+      "review": "PASS",
+      "capacity": "live"
+    },
+    "required_assertions": [
+      "the luna_only constraint reaches Sol",
+      "Sol decomposes or re-plans normally-Terra work",
+      "bounded Luna tasks execute with no Terra dispatch",
+      "BLOCKED is allowed only when safe Luna decomposition is objectively impossible"
+    ]
+  },
+  {
     "id": "incomplete-luna-packet",
     "prompt": "$sol-control: execute a task whose packet omits Do not touch and Verification.",
+    "expected": {
+      "route": "sol_then_luna",
+      "sol": "required",
+      "luna": "required",
+      "review": "FIX",
+      "capacity": "live"
+    },
+    "required_assertions": [
+      "Luna returns FIX before writing",
+      "missing packet fields are not invented",
+      "Sol repairs or re-plans the packet inside the original authorization",
+      "execution may continue after the packet is repaired"
+    ]
+  },
+  {
+    "id": "incomplete-packet-unresolved-authorization",
+    "prompt": "$sol-control: execute a task whose required scope cannot be determined without new authorization.",
     "expected": {
       "route": "sol_then_luna",
       "sol": "required",
@@ -107,9 +162,10 @@
       "capacity": "live"
     },
     "required_assertions": [
-      "Luna returns BLOCKED before writing",
-      "missing packet fields are not invented",
-      "the blocker identifies the missing fields"
+      "the worker does not write or invent the missing scope",
+      "the required scope cannot be determined inside the original authorization",
+      "new authorization is required",
+      "the unresolved packet produces BLOCKED"
     ]
   },
   {
@@ -166,15 +222,34 @@
     "expected": {
       "route": "sol_then_luna",
       "sol": "required",
-      "luna": "blocked",
-      "review": "BLOCKED",
+      "luna": "required",
+      "review": "FIX",
       "capacity": "live",
       "resume": "not_applicable"
     },
     "required_assertions": [
       "Evidence binds to the final candidate identity",
       "candidate change invalidates stale evidence",
-      "affected verification is rerun before PASS"
+      "stale evidence cannot PASS",
+      "affected verification is rerun through FIX before PASS"
+    ]
+  },
+  {
+    "id": "stale-evidence-reverification-unavailable",
+    "prompt": "$sol-control: the candidate changed after verification and required reverification cannot run because a real dependency or permission is unavailable.",
+    "expected": {
+      "route": "sol_then_luna",
+      "sol": "required",
+      "luna": "blocked",
+      "review": "BLOCKED",
+      "capacity": "live",
+      "resume": "not_applicable"
+    },
+    "required_assertions": [
+      "previous evidence is stale and cannot support PASS",
+      "Sol attempts FIX and required reverification",
+      "the dependency or permission blocker prevents reverification",
+      "only unavailable required reverification produces BLOCKED"
     ]
   },
   {

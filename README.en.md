@@ -20,6 +20,10 @@ use Luna Max.
 > uses Luna Max only. For complex work, the Luna-only mode first decomposes and re-plans within
 > the original authorization into bounded Luna tasks instead of dispatching Terra automatically.
 
+When `$sol-luna` is invoked, the Skill adds `Execution mode: luna_only`,
+`Allowed workers: luna-max-worker`, and the Terra-unavailable constraint to Sol's plan request
+after the identity handshake.
+
 Runtime output defaults to Simplified Chinese unless the user explicitly requests another language.
 
 > **One Sol, two execution tiers. Terra and Luna are leaf executors: neither may create subagents or approve the overall task.**
@@ -292,6 +296,8 @@ The gate is only Luna's zero-write state before its first failure; Terra's write
 
 After Luna writes an owned file, it retains ownership for the run. Sol may issue bounded repairs only to the original Luna owner, and may not hand the already-written file to Terra for replacement. If decomposition is the problem and the goal, authorization, and do-not-touch boundaries are unchanged, Sol may automatically re-plan; written files keep their owner and unwritten files may be reassigned.
 
+This Luna-to-Terra escalation applies only to normal `$sol-control` tiered mode; the `$sol-luna` mode handoff disables it completely.
+
 ## Review outcomes
 
 | Verdict | Meaning |
@@ -353,7 +359,7 @@ The current release baseline is **[v0.4.1](https://github.com/yehyakin/codex-sol
 
 | Verification surface | Recorded evidence |
 | --- | --- |
-| Local repository | Skill Creator **PASS**; the v0.4.1 candidate records **113/113 tests PASS** |
+| Local repository | Skill Creator **PASS**; upstream v0.4.1 baseline evidence records **113/113 tests PASS**, not evidence for this personal branch |
 | Hosted CI | [POSIX PASS](https://github.com/yehyakin/codex-sol-control/actions/runs/31254093412): Ubuntu/macOS × Python 3.11/3.13; [Windows PASS](https://github.com/yehyakin/codex-sol-control/actions/runs/31254093408): Windows Server 2022 / `windows-latest` × Windows PowerShell 5.1 / PowerShell 7 |
 | Physical Windows install | User-reported installation success; the Windows version, install log, and runtime identity payload were not captured, so this does not establish Native Nested |
 | Desktop Sol handshake | v0.4.1 verifies the authoritative Host/tool role mapping + `fork_turns="none"` launch record + child permission/no-side-effect receipt; the same Sol completed final review with `PASS`; Desktop nested worker dispatch remains unproven |

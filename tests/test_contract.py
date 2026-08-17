@@ -238,6 +238,37 @@ class RepositoryContractTests(unittest.TestCase):
         )
         self.assertNotRegex(text, r"(?m)^\s*Candidate:\s*")
 
+    def test_repairable_incomplete_packet_is_fixable_but_worker_never_guesses(self) -> None:
+        text = self.contract_text()
+        self.assertRegex(
+            text,
+            r"(?is)(?:incomplete|missing).{0,180}(?:packet|field).{0,260}FIX.{0,220}(?:repair|re-?plan|redispatch)",
+        )
+        self.assertRegex(
+            text,
+            r"(?is)(?:worker|Luna or Terra).{0,160}(?:must not|without).{0,80}(?:write|guess)",
+        )
+        self.assertRegex(
+            text,
+            r"(?is)(?:original goal|original authorization|do_not_touch|permission boundary).{0,300}(?:repair|re-?plan)",
+        )
+        self.assertRegex(
+            text,
+            r"(?is)(?:cannot be safely inferred|new authorization|scope.{0,40}ownership).{0,180}BLOCKED",
+        )
+
+    def test_stale_evidence_requires_fix_reverification_and_never_passes(self) -> None:
+        text = self.contract_text()
+        self.assertRegex(
+            text,
+            r"(?is)stale.{0,180}(?:FIX|re-?verify|rerun).{0,220}(?:before|not).{0,100}PASS",
+        )
+        self.assertRegex(
+            text,
+            r"(?is)required reverification.{0,220}BLOCKED",
+        )
+        self.assertRegex(text, r"(?is)stale evidence cannot pass|stale.{0,120}cannot pass")
+
     def test_v040_transport_completion_cannot_substitute_task_pass(self) -> None:
         text = self.contract_text()
         self.assertIn(
@@ -484,11 +515,15 @@ class RepositoryContractTests(unittest.TestCase):
             "single-file-execution",
             "live-capacity-batching",
             "shared-integration-owner",
+            "sol-luna-bounded-file-luna-only",
+            "sol-luna-complex-decomposes-to-luna",
             "incomplete-luna-packet",
+            "incomplete-packet-unresolved-authorization",
             "exact-selection-unavailable",
             "focused-sol-fix",
             "dirty-worktree-preserved",
             "stale-evidence-after-candidate-change",
+            "stale-evidence-reverification-unavailable",
             "transport-completed-not-pass",
             "identical-retry-no-delta",
             "long-task-resume",
@@ -534,6 +569,14 @@ class RepositoryContractTests(unittest.TestCase):
         by_id = {case["id"]: case for case in cases}
         self.assertEqual("forbidden", by_id["ordinary-simple-direct"]["expected"].get("resume"))
         self.assertEqual("required", by_id["long-task-resume"]["expected"].get("resume"))
+
+        for case_id in ("sol-luna-bounded-file-luna-only", "sol-luna-complex-decomposes-to-luna"):
+            self.assertEqual("luna_only", by_id[case_id]["expected"].get("mode"), case_id)
+            self.assertEqual("blocked", by_id[case_id]["expected"].get("terra"), case_id)
+        self.assertEqual("FIX", by_id["incomplete-luna-packet"]["expected"]["review"])
+        self.assertEqual("BLOCKED", by_id["incomplete-packet-unresolved-authorization"]["expected"]["review"])
+        self.assertEqual("FIX", by_id["stale-evidence-after-candidate-change"]["expected"]["review"])
+        self.assertEqual("BLOCKED", by_id["stale-evidence-reverification-unavailable"]["expected"]["review"])
 
         ownership_ids = {
             "luna-first-failure-before-write-escalates-terra",

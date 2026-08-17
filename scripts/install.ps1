@@ -322,6 +322,10 @@ function Assert-Source {
     if ($compatSkill -notmatch "(?m)^name:\s*sol-luna\s*$" -or
         $compatSkill -notmatch '\$sol-luna' -or
         $compatSkill -notmatch '(?i)inherits.{0,120}\$sol-control' -or
+        $compatSkill -notmatch '(?i)Execution mode:\s*luna_only' -or
+        $compatSkill -notmatch '(?i)Allowed workers:\s*luna-max-worker' -or
+        $compatSkill -notmatch '(?is)identity-only handshake.{0,180}plan request' -or
+        $compatSkill -notmatch '(?i)no Terra dispatch.{0,100}(?:Luna-to-Terra|no Terra).*escalation' -or
         $compatSkill -notmatch '(?i)Terra High is unavailable|Terra High.*不可用' -or
         $compatSkill -notmatch '(?i)delegated.{0,100}Luna Max|委派.{0,100}Luna Max' -or
         $compatSkill -notmatch '(?i)decompos.{0,120}re-plan|拆分.{0,120}re-plan' -or
@@ -338,6 +342,13 @@ function Assert-Source {
     $sol = Get-Content -LiteralPath (Join-Path $Root ".codex/agents/sol-controller.toml") -Raw
     $luna = Get-Content -LiteralPath (Join-Path $Root ".codex/agents/luna-max-worker.toml") -Raw
     $terra = Get-Content -LiteralPath (Join-Path $Root ".codex/agents/terra-high-worker.toml") -Raw
+    if ($sol -notmatch '(?is)explicit execution-mode.{0,260}luna_only' -or
+        $sol -notmatch '(?is)When luna_only is absent.{0,180}tiered' -or
+        $sol -notmatch '(?is)only when luna_only is absent.{0,220}escalat.{0,100}Terra' -or
+        $sol -notmatch '(?is)incomplete.{0,220}packet.{0,220}FIX.{0,180}(?:repair|re-plan|redispatch)' -or
+        $sol -notmatch '(?is)stale.{0,180}FIX.{0,180}rerun.{0,180}BLOCKED') {
+        throw "source validation failed"
+    }
     foreach ($pair in @(
         @($sol, '(?m)^\s*name\s*=\s*"sol-controller"\s*$'),
         @($sol, '(?m)^\s*model\s*=\s*"gpt-5\.6-sol"\s*$'),

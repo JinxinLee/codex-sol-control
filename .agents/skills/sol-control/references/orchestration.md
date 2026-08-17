@@ -27,6 +27,13 @@ high-risk implementation. When those traits are visible at planning time, route
 directly to Terra rather than trialing Luna first to reduce cost. Terra never
 plans or approves the overall task.
 
+An invoking Skill may attach an explicit mode block to Sol's post-handshake plan
+request. With `Execution mode: luna_only` and `Allowed workers: luna-max-worker`,
+Terra is unavailable: Sol must not dispatch or escalate any task to Terra and
+must decompose or re-plan complex work into bounded Luna tasks. Without that
+mode, the normal `$sol-control` Luna/Terra routing and zero-write escalation
+remain available.
+
 Before task execution or any write, combine the authoritative Host/tool role
 mapping, parent launch record, and child's permission/no-side-effect handshake
 to prove exact model identity, reasoning effort, selected custom agent, fork
@@ -117,8 +124,13 @@ Expected result: <observable acceptance condition>
 Verification: <exact command or procedure and passing condition>
 ```
 
-Luna or Terra returns `BLOCKED` without writing if a required field is missing, scope is
-contradictory, a dependency is absent, or authorization cannot be proved.
+If a required field is missing or scope is incomplete, Luna or Terra returns
+`FIX` without writing when Sol can repair the packet inside the original goal,
+authorization, `do_not_touch`, and permission boundary; the worker must never
+guess. Sol repairs or re-plans and may redispatch. Return `BLOCKED` only when
+the defect cannot be safely inferred, requires new authorization, or leaves
+scope/ownership unresolved. An absent dependency or unproved authorization is
+still `BLOCKED`.
 
 ## 6. Shared execution result
 
@@ -150,7 +162,10 @@ overall project.
 
 Evidence must bind to the final candidate identity using either a commit+diff
 identity or an exact changed-file snapshot. If the candidate changes after
-verification, the old evidence is stale and affected verification must be rerun.
+verification, the old evidence is stale: enter `FIX` and rerun affected
+verification. Stale evidence cannot pass. If required reverification is
+unavailable because of a real dependency, permission, or environment blocker,
+return `BLOCKED`.
 Do not add a top-level `Candidate` field to the worker result.
 
 Transport/spawn `completed` only proves delivery lifecycle completion. It cannot
@@ -180,12 +195,13 @@ Sol returns exactly one verdict:
 Sol must reject an evidence-free worker `PASS`, an out-of-scope write, an omitted
 criterion, or a failed command.
 
-Only when Luna's first failure happens before Luna writes any owned file may Sol
-perform one bounded escalation of the same task and unchanged scope to Terra
-instead of unbounded Luna retries. If Luna has written any owned file before
-failing, Luna retains all ownership; Terra never replaces that owner. Terra's
-write state is never the escalation gate. The packet, authorization boundary,
-evidence freshness, correction rules, and scope remain unchanged.
+In normal tiered mode, only when Luna's first failure happens before Luna writes
+any owned file may Sol perform one bounded escalation of the same task and
+unchanged scope to Terra instead of unbounded Luna retry attempts. If Luna has written
+any owned file before failing, Luna retains all ownership; Terra never replaces
+that owner. Terra's write state is never the escalation gate. In `luna_only`
+mode, this escalation is disabled completely. The packet, authorization
+boundary, evidence freshness, correction rules, and scope remain unchanged.
 
 ## 8. Bounded repair and authorized re-plan
 

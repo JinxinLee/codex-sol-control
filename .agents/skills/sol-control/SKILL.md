@@ -40,6 +40,10 @@ a permanent agent team.
   ambiguous debugging, shared interface judgment, or high-risk implementation.
   When these traits are visible at planning time, route directly to Terra; do
   not trial Luna first merely to reduce cost.
+- Respect an explicit execution-mode or worker-routing constraint supplied by
+  the invoking Skill. Without `luna_only`, use the normal `$sol-control`
+  tiered Luna/Terra routing; with `luna_only`, Terra is unavailable and all
+  delegated execution must be decomposed or re-planned for Luna Max.
 - Start every custom agent with a fresh context: set `fork_turns="none"` and use
   the first turn only as an identity handshake. The authoritative Host/tool
   contract plus the parent launch record must prove the selected `agent_type`,
@@ -59,11 +63,12 @@ a permanent agent team.
   the exact model identity, reasoning effort, selected agent, fork mode,
   permission boundary, or no-write proof is mismatched or unprovable, do not
   send the task: **Fail Closed** and return `BLOCKED`.
-- One file has one owner for the whole run. Only when Luna's first failure
-  happens before Luna writes any owned file may Sol escalate the same task and
-  unchanged scope to Terra once. If Luna has written any owned file before
-  failing, Luna retains all ownership; Terra never replaces that owner. Terra's
-  write state is never the escalation gate.
+- One file has one owner for the whole run. In normal tiered mode, only when
+  Luna's first failure happens before Luna writes any owned file may Sol
+  escalate the same task and unchanged scope to Terra once. If Luna has
+  written any owned file before failing, Luna retains all ownership; Terra
+  never replaces that owner. Terra's write state is never the escalation gate.
+  A `luna_only` mode disables this escalation completely.
 
 ## Workflow
 
@@ -138,8 +143,12 @@ Expected result: <observable acceptance condition>
 Verification: <exact command or procedure and passing condition>
 ```
 
-An incomplete, contradictory, or unauthorized packet is `BLOCKED`; the worker must
-not guess the missing scope.
+If an incomplete or contradictory packet is received, the worker must not write or guess.
+Return `FIX` with the concrete packet defect when Sol can fill it from the
+original goal, authorization, `do_not_touch`, and permission boundary; Sol then
+repairs or re-plans the packet and may redispatch. Return `BLOCKED` only when
+the missing information cannot be safely inferred, requires new authorization,
+or leaves scope/ownership genuinely unresolved.
 
 ## Shared execution result
 
@@ -168,8 +177,11 @@ unfinished.
 
 Evidence must bind to the final candidate identity, represented by a commit+diff
 identity or an exact changed-file snapshot. If the candidate changes after
-verification, prior evidence is stale and affected verification must be rerun
-before `PASS`. A top-level `Candidate` result field is not added.
+verification, prior evidence is stale: return `FIX` and rerun affected
+verification before `PASS`. If required reverification is unavailable because of
+a real dependency, permission, or environment blocker, return `BLOCKED`. Stale
+evidence cannot pass.
+A top-level `Candidate` result field is not added.
 
 transport/spawn `completed` only proves delivery lifecycle completion; it cannot substitute for a structured Luna `PASS` or internal `FIX`, or a structured Terra `PASS` or internal `FIX`, Verification/Evidence/changed-path proof, or Sol review.
 
@@ -200,7 +212,8 @@ defect enters a bounded repair loop of at most three focused repairs. Every
 repair keeps the original owner and original write scope, and must be based on
 new verification evidence rather than a repeated prompt. Continue only when
 there is material progress; stop early when the core failure is unchanged. After
-three unsuccessful repairs, return `BLOCKED`.
+three unsuccessful repairs, return `BLOCKED`; do not consume the repair budget
+through unbounded Luna retry attempts.
 
 Every Correction Packet keeps the original owner and original scope, and contains
 `Failure class: runtime | model_identity | permission | dependency | scope | verification | conflict | none`

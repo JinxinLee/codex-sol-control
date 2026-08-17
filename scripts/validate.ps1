@@ -390,6 +390,10 @@ foreach ($pattern in @(
     '(?m)^name:\s*sol-luna\s*$',
     '\$sol-luna',
     '(?i)inherits.{0,120}\$sol-control',
+    '(?i)Execution mode:\s*luna_only',
+    '(?i)Allowed workers:\s*luna-max-worker',
+    '(?is)identity-only handshake.{0,180}plan request',
+    '(?i)no Terra dispatch.{0,100}(?:Luna-to-Terra|no Terra).*escalation',
     '(?i)Terra High is unavailable|Terra High.*不可用',
     '(?i)delegated.{0,100}Luna Max|委派.{0,100}Luna Max',
     '(?i)decompos.{0,120}re-plan|拆分.{0,120}re-plan'
@@ -405,6 +409,16 @@ $solPath = Join-Path $repoRoot ".codex/agents/sol-controller.toml"
 $lunaPath = Join-Path $repoRoot ".codex/agents/luna-max-worker.toml"
 $terraPath = Join-Path $repoRoot ".codex/agents/terra-high-worker.toml"
 Assert-TomlAgents $solPath $lunaPath $terraPath
+$solText = Read-Utf8Text $solPath
+foreach ($pattern in @(
+    '(?is)explicit execution-mode.{0,260}luna_only',
+    '(?is)When luna_only is absent.{0,180}tiered',
+    '(?is)only when luna_only is absent.{0,220}escalat.{0,100}Terra',
+    '(?is)incomplete.{0,220}packet.{0,220}FIX.{0,180}(?:repair|re-plan|redispatch)',
+    '(?is)stale.{0,180}FIX.{0,180}rerun.{0,180}BLOCKED'
+)) {
+    Assert-Regex $solText $pattern "sol-controller mode/repair contract is incomplete"
+}
 
 foreach ($markdown in @(Get-ChildItem -LiteralPath $repoRoot -Filter "*.md" -File -Force -Recurse)) {
     if ($markdown.FullName.IndexOf(([System.IO.Path]::DirectorySeparatorChar + ".git" + [System.IO.Path]::DirectorySeparatorChar), [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {

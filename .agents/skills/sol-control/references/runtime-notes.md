@@ -97,16 +97,23 @@ sent to the verified same agent in its next turn. Never combine a custom
 `agent_type` with a full-history fork; if fresh-context selection cannot be
 honored, fail closed so the parent model or role identity is not inherited
 accidentally.
+
+The invoking Skill may pass `Execution mode: luna_only` and
+`Allowed workers: luna-max-worker` in Sol's post-handshake plan request. In that
+mode Terra is unavailable, no Terra dispatch or Luna-to-Terra escalation is
+allowed, and complex work must be decomposed or re-planned into bounded Luna
+tasks. Without that explicit mode, retain the normal tiered routing below.
+
 Luna is only for clear, low-ambiguity, falsifiable,
 small context, mechanical, or high-throughput work; Terra is for cross-module,
 long-context, ambiguous-debugging, shared interface, or high-risk implementation
-work. When those traits are visible at planning time, route directly to Terra;
-do not trial Luna first merely to reduce cost. Only when Luna's first failure
-happens before Luna writes any owned file may Sol perform one bounded escalation
-of the same task and unchanged scope to Terra rather than an unbounded Luna
-retry. If Luna has written any owned file before failing, Luna retains all
-ownership; Terra never replaces that owner. Terra's write state is never the
-escalation gate, and an already-written file is never reassigned.
+work. In normal tiered mode, when those traits are visible at planning time,
+route directly to Terra; do not trial Luna first merely to reduce cost. Only in
+that mode may Luna's first failure before any owned write escalate the same task
+and unchanged scope to Terra rather than retry Luna indefinitely. If Luna has
+written any owned file before failing, Luna retains all ownership; Terra never
+replaces that owner. Terra's write state is never the escalation gate, and an
+already-written file is never reassigned.
 
 ## Capacity and batching
 
@@ -157,7 +164,14 @@ the only exception.
   otherwise the current task is `BLOCKED`.
 - Evidence must bind to the final candidate identity with a commit+diff identity
   or exact changed-file snapshot. If the candidate changes after verification,
-  old evidence is stale and affected verification must be rerun before `PASS`.
+  old evidence is stale: return `FIX` and rerun affected verification before
+  `PASS`. If required reverification is unavailable because of a real dependency,
+  permission, or environment blocker, return `BLOCKED`.
+
+If a required packet field is missing or incomplete, the worker must not write or
+guess. Return `FIX` with the concrete defect when Sol can repair it inside the
+original authorization and permission boundary; otherwise return `BLOCKED` only
+for an unsafe inference, new authorization need, or unresolved scope/ownership.
 
 Correction packets retain the original owner and scope. Their Failure class is
 one of `runtime | model_identity | permission | dependency | scope | verification |

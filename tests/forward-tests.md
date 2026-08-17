@@ -48,11 +48,13 @@ repository, global agent file, or live production system is read or modified.
 | Single-file execution | `sol_then_luna` | required | PASS |
 | Changing live capacity | `sol_then_luna` | required, dynamically batched | PASS |
 | Shared integration file | `sol_then_luna` | one owner for the shared file | PASS |
-| Incomplete Luna packet | `sol_then_luna` | BLOCKED before write | BLOCKED |
+| Repairable incomplete Luna packet | `sol_then_luna` | FIX before write; Sol repairs/re-plans packet | FIX |
+| Unresolved packet scope | `sol_then_luna` | BLOCKED before write; new authorization required | BLOCKED |
 | Unprovable exact selection | `blocked` | BLOCKED | BLOCKED |
 | One missed criterion | `sol_then_luna` | up to three evidence-backed repairs | FIX |
 | Dirty worktree | `sol_then_luna` | scoped writes only | PASS |
-| Stale evidence after candidate change | `sol_then_luna` | BLOCKED until affected verification reruns | BLOCKED |
+| Stale evidence after candidate change | `sol_then_luna` | FIX and rerun affected verification; stale evidence cannot pass | FIX |
+| Required reverification unavailable | `sol_then_luna` | BLOCKED only for a real dependency/permission/environment blocker | BLOCKED |
 | Transport/spawn `completed` | `sol_then_luna` | delivery only; structured result required | BLOCKED |
 | Identical retry with no Delta | `sol_then_luna` | no relaunch without new evidence | BLOCKED |
 | Long-task resume | `sol_then_luna` | minimal resume packet required | PASS |
@@ -66,6 +68,8 @@ repository, global agent file, or live production system is read or modified.
 | Explicit user steering | `sol` | old plan stops and Sol re-plans | not applicable |
 | Luna: low-ambiguity, falsifiable, small context | `sol_then_luna` | required; Terra not selected | PASS |
 | Terra: cross-module and long context | `sol_then_terra` | no Luna; Terra required | PASS |
+| `$sol-luna`: bounded file | `sol_then_luna` | `luna_only`; Luna required; Terra unavailable | PASS |
+| `$sol-luna`: complex decomposition | `sol_then_luna` | Sol re-plans into bounded Luna tasks; Terra unavailable | PASS |
 | Model identity unavailable | `blocked` | Luna and Terra BLOCKED; no substitution | BLOCKED |
 | Luna first classification failure before any write | `sol_then_terra` | same task/scope upgraded once only after zero Luna-owned writes | PASS |
 | Luna first failure after an owned write | `sol_then_luna` | Luna retains scope; up to three bounded repairs or `BLOCKED`; Terra blocked | FIX/BLOCKED |

@@ -182,6 +182,13 @@ class LunaOnlySpecializationContractTests(unittest.TestCase):
         )
         self.assertTrue(specialization, LUNA_SKILL_ROOT)
         self.assertRegex(specialization, r"(?is)inherits.{0,120}\$sol-control")
+        self.assertRegex(specialization, r"(?i)Execution mode:\s*luna_only")
+        self.assertRegex(specialization, r"(?i)Allowed workers:\s*luna-max-worker")
+        self.assertRegex(specialization, r"(?is)identity-only handshake.{0,180}plan request")
+        self.assertRegex(
+            specialization,
+            r"(?i)no Terra dispatch.{0,100}(?:Luna-to-Terra|no Terra).*escalation",
+        )
         self.assertRegex(specialization, r"(?i)Terra High is unavailable|Terra High.{0,80}不可用")
         self.assertRegex(specialization, r"(?i)delegated.{0,100}Luna Max|委派.{0,100}Luna Max")
         self.assertRegex(specialization, r"(?i)decompos.{0,120}re-plan|拆分.{0,120}re-plan")
@@ -193,6 +200,9 @@ class LunaOnlySpecializationContractTests(unittest.TestCase):
         controller = compact(read_text(SOL_AGENT))
         base = compact(read_text(SKILL_ROOT / "SKILL.md"))
         self.assertRegex(controller, r"(?i)Terra High")
+        self.assertRegex(controller, r"(?is)explicit execution-mode.{0,260}luna_only")
+        self.assertRegex(controller, r"(?is)When luna_only is absent.{0,180}tiered")
+        self.assertRegex(controller, r"(?is)only when luna_only is absent.{0,220}escalat.{0,100}Terra")
         self.assertRegex(controller, r"(?i)Route.{0,80}Terra|Terra.{0,80}cross-module")
         self.assertRegex(base, r"(?i)Route to.{0,120}Terra High")
 
@@ -342,6 +352,12 @@ class ForwardCaseContractTests(unittest.TestCase):
             "model-identity-unavailable-fail-closed",
             "luna-classification-error-escalates-terra",
             "single-file-unique-owner",
+            "sol-luna-bounded-file-luna-only",
+            "sol-luna-complex-decomposes-to-luna",
+            "incomplete-luna-packet",
+            "incomplete-packet-unresolved-authorization",
+            "stale-evidence-after-candidate-change",
+            "stale-evidence-reverification-unavailable",
         }
         self.assertTrue(required.issubset(by_id), sorted(required - set(by_id)))
 
@@ -353,6 +369,14 @@ class ForwardCaseContractTests(unittest.TestCase):
             by_id["luna-classification-error-escalates-terra"]["expected"]["route"],
         )
         self.assertEqual("sol_then_terra", by_id["single-file-unique-owner"]["expected"]["route"])
+        for case_id in ("sol-luna-bounded-file-luna-only", "sol-luna-complex-decomposes-to-luna"):
+            self.assertEqual("sol_then_luna", by_id[case_id]["expected"]["route"])
+            self.assertEqual("luna_only", by_id[case_id]["expected"]["mode"])
+            self.assertEqual("blocked", by_id[case_id]["expected"]["terra"])
+        self.assertEqual("FIX", by_id["incomplete-luna-packet"]["expected"]["review"])
+        self.assertEqual("BLOCKED", by_id["incomplete-packet-unresolved-authorization"]["expected"]["review"])
+        self.assertEqual("FIX", by_id["stale-evidence-after-candidate-change"]["expected"]["review"])
+        self.assertEqual("BLOCKED", by_id["stale-evidence-reverification-unavailable"]["expected"]["review"])
 
         assertion_text = " ".join(
             assertion
@@ -367,6 +391,9 @@ class ForwardCaseContractTests(unittest.TestCase):
         self.assertRegex(assertion_text, r"(?i)classif(?:ication|y).{0,100}(?:Terra|terra|升级)")
         self.assertRegex(assertion_text, r"(?i)(?:not|no).{0,100}(?:infinite|unbounded).{0,100}Luna")
         self.assertRegex(assertion_text, r"(?i)one\s+owner|唯一 owner")
+        self.assertRegex(assertion_text, r"(?i)luna_only")
+        self.assertRegex(assertion_text, r"(?i)decompos|re-plan")
+        self.assertRegex(assertion_text, r"(?i)stale evidence")
 
     def test_escalation_fixture_separates_zero_write_allow_from_written_file_forbid(self) -> None:
         cases = self.load_cases()

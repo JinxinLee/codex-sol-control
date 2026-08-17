@@ -115,6 +115,10 @@ if [[ -f "$COMPAT_SKILL_FILE" ]]; then
   fi
   [[ "$(wc -l < "$COMPAT_SKILL_FILE" | tr -d ' ')" -le 45 ]] || fail 'sol-luna specialization SKILL.md is not thin'
   grep -Eiq 'inherits.{0,120}\$sol-control' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not inherit $sol-control'
+  grep -Eiq 'Execution mode:[[:space:]]*luna_only' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not hand off luna_only mode'
+  grep -Eiq 'Allowed workers:[[:space:]]*luna-max-worker' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not restrict workers'
+  grep -Eiq 'identity-only handshake.{0,180}plan request' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not bind mode after handshake'
+  grep -Eiq 'no Terra dispatch.{0,100}(Luna-to-Terra|no Terra).*escalation' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not disable escalation'
   grep -Eiq 'Terra High is unavailable|Terra High.{0,80}不可用' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not disable Terra'
   grep -Eiq 'delegated.{0,100}Luna Max|委派.{0,100}Luna Max' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization does not require Luna'
   grep -Eiq 'decompos.{0,120}re-plan|拆分.{0,120}re-plan' "$COMPAT_SKILL_FILE" || fail 'sol-luna specialization lacks complex-task decomposition'
@@ -303,6 +307,20 @@ for path, expected in (
         fail()
 
 try:
+    sol_instructions = tomllib.load(sol_file.open("rb"))["developer_instructions"]
+except (OSError, KeyError, tomllib.TOMLDecodeError):
+    fail()
+for pattern in (
+    r"(?is)explicit execution-mode.{0,260}luna_only",
+    r"(?is)When luna_only is absent.{0,180}tiered",
+    r"(?is)only when luna_only is absent.{0,220}escalat.{0,100}Terra",
+    r"(?is)incomplete.{0,220}packet.{0,220}FIX.{0,180}(?:repair|re-plan|redispatch)",
+    r"(?is)stale.{0,180}FIX.{0,180}rerun.{0,180}BLOCKED",
+):
+    if not re.search(pattern, sol_instructions):
+        fail()
+
+try:
     luna_instructions = tomllib.load(luna_file.open("rb"))["developer_instructions"]
 except (OSError, KeyError, tomllib.TOMLDecodeError):
     fail()
@@ -334,10 +352,12 @@ if len(compat_skill_text.splitlines()) > 45:
     fail()
 if not re.search(r"(?m)^name:\s*sol-luna\s*$", compat_skill_text):
     fail()
-for marker in ("$sol-luna", "$sol-control", "Terra High is unavailable", "Luna Max", "re-plan"):
+for marker in ("$sol-luna", "$sol-control", "Execution mode: luna_only", "Allowed workers: luna-max-worker", "Terra High is unavailable", "Luna Max", "re-plan"):
     if marker not in compat_skill_text:
         fail()
 if not re.search(r"(?is)inherits.{0,120}\$sol-control", compat_skill_text):
+    fail()
+if not re.search(r"(?is)identity-only handshake.{0,180}plan request", compat_skill_text):
     fail()
 compat_openai_text = read_text(compat_openai_file)
 for marker in ("$sol-luna", "Luna Max", "allow_implicit_invocation: false"):

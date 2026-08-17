@@ -19,6 +19,9 @@
 > 只使用 Luna Max。后者遇到复杂任务时，会在原授权范围内优先拆分并 re-plan 为有界
 > Luna 任务，不会自动调用 Terra。
 
+调用 `$sol-luna` 时，Skill 会在 Sol 身份握手后把 `Execution mode: luna_only`、
+`Allowed workers: luna-max-worker` 和 Terra 不可用约束写入发送给 Sol 的 plan request。
+
 运行时默认使用简体中文；如果用户明确指定其他语言，则遵循用户选择。
 
 > **一个 Sol，两级执行。Terra 与 Luna 都是叶子执行者，不得创建子代理，也不得批准整体任务。**
@@ -291,6 +294,8 @@ worker 的 `PASS` 只代表它自己的任务通过。只有 Sol 可以批准整
 
 一旦 Luna 已经写入 owned file，它保留该文件在本轮运行中的 ownership。Sol 只能把 bounded repair 交回原 Luna owner，不能把已经写过的文件转交给 Terra 覆盖。若问题是拆分不合理，且目标、授权和 do-not-touch 边界不变，Sol 可自动 re-plan；已写文件保留 owner，未写文件可以重新分配。
 
+上述 Luna→Terra 升级只适用于 normal `$sol-control` tiered mode；`$sol-luna` 的 mode handoff 会完全禁用该升级。
+
 ## 审核结果
 
 | 结果 | 含义 |
@@ -352,7 +357,7 @@ pwsh -NoProfile -File scripts/uninstall.ps1 -RestoreLatest
 
 | 验证面 | 已记录证据 |
 | --- | --- |
-| 本地仓库 | Skill Creator **PASS**；v0.4.1 候选版本 **113/113 tests PASS** |
+| 本地仓库 | Skill Creator **PASS**；上游 v0.4.1 基线证据为 **113/113 tests PASS**，不代表当前 personal 分支 |
 | 托管 CI | [POSIX PASS](https://github.com/yehyakin/codex-sol-control/actions/runs/31254093412)：Ubuntu/macOS × Python 3.11/3.13；[Windows PASS](https://github.com/yehyakin/codex-sol-control/actions/runs/31254093408)：Windows Server 2022 / `windows-latest` × Windows PowerShell 5.1 / PowerShell 7 |
 | Windows 实机安装 | 用户报告安装成功；未收集 Windows 版本、安装日志或运行时身份载荷，因此不扩展为 Native Nested 证明 |
 | Desktop Sol 握手 | v0.4.1 已验证 Host/tool 权威角色映射 + `fork_turns="none"` 启动记录 + child 权限/零副作用回执；同一个 Sol 完成最终审核并返回 `PASS`；Desktop 嵌套 worker 调度仍未证明 |
