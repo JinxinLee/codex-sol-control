@@ -168,10 +168,19 @@ the only exception.
   `PASS`. If required reverification is unavailable because of a real dependency,
   permission, or environment blocker, return `BLOCKED`.
 
-If a required packet field is missing or incomplete, the worker must not write or
-guess. Return `FIX` with the concrete defect when Sol can repair it inside the
-original authorization and permission boundary; otherwise return `BLOCKED` only
-for an unsafe inference, new authorization need, or unresolved scope/ownership.
+If a required packet field is missing, incomplete, or contradictory, or the
+packet does not make the execution boundary determinable, the worker must not
+write, guess, or broaden scope. Return `FIX` with the concrete packet defect;
+the worker judges only packet sufficiency and does not decide whether Sol can
+repair or re-plan within total authorization. A packet defect is not worker
+`BLOCKED`; independent execution blockers after packet sufficiency remain
+`BLOCKED`.
+
+Sol owns the final repairability decision. Sol compares the original goal,
+`done_when`, total authorization, `do_not_touch`, permission, ownership, and
+user instructions. When those constraints safely determine a correction, Sol
+issues a fresh corrected packet and redispatches it to the same owner; otherwise
+Sol returns `BLOCKED`.
 
 Correction packets retain the original owner and scope. Their Failure class is
 one of `runtime | model_identity | permission | dependency | scope | verification |

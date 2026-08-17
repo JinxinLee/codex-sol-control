@@ -143,12 +143,13 @@ Expected result: <observable acceptance condition>
 Verification: <exact command or procedure and passing condition>
 ```
 
-If an incomplete or contradictory packet is received, the worker must not write or guess.
-Return `FIX` with the concrete packet defect when Sol can fill it from the
-original goal, authorization, `do_not_touch`, and permission boundary; Sol then
-repairs or re-plans the packet and may redispatch. Return `BLOCKED` only when
-the missing information cannot be safely inferred, requires new authorization,
-or leaves scope/ownership genuinely unresolved.
+If a required field is missing, incomplete, or contradictory, or the packet does
+not make the execution boundary determinable, Luna or Terra must not write,
+guess, or broaden scope. The worker returns `FIX` with the concrete packet
+defect and judges only packet sufficiency; it does not decide whether Sol can
+repair or re-plan the packet within total authorization, and it does not return
+`BLOCKED` for that packet defect. Independent execution blockers after packet
+sufficiency remain `BLOCKED`.
 
 ## Shared execution result
 
@@ -207,13 +208,18 @@ decides whether the overall work is complete.
 ## Review and correction
 
 Sol returns `PASS | FIX | BLOCKED`. Evidence-free `PASS`, out-of-scope writes,
-failed verification, conflicts, or missed criteria cannot pass review. A normal
-defect enters a bounded repair loop of at most three focused repairs. Every
-repair keeps the original owner and original write scope, and must be based on
-new verification evidence rather than a repeated prompt. Continue only when
-there is material progress; stop early when the core failure is unchanged. After
-three unsuccessful repairs, return `BLOCKED`; do not consume the repair budget
-through unbounded Luna retry attempts.
+failed verification, conflicts, or missed criteria cannot pass review. Sol owns
+the final packet-repair decision: compare the original goal, `done_when`, total
+authorization, `do_not_touch`, permission, ownership, and user instructions.
+When those constraints safely determine a correction, Sol issues a fresh
+corrected packet and redispatches it to the same owner; otherwise Sol returns
+`BLOCKED`. A worker packet-sufficiency `FIX` is not itself a `BLOCKED` decision.
+A normal defect enters a bounded repair loop of at most three focused repairs.
+Every repair keeps the original owner and original write scope, and must be
+based on new verification evidence rather than a repeated prompt. Continue only
+when there is material progress; stop early when the core failure is unchanged.
+After three unsuccessful repairs, return `BLOCKED`; do not consume the repair
+budget through unbounded Luna retry attempts.
 
 Every Correction Packet keeps the original owner and original scope, and contains
 `Failure class: runtime | model_identity | permission | dependency | scope | verification | conflict | none`
@@ -222,13 +228,13 @@ latest `Progress` comparison. The `none` class means no failure occurred; any
 failure uses another allowed class. The same task packet with no new evidence is `BLOCKED` and is not relaunched.
 
 If the failure shows that the decomposition—not the implementation—is wrong,
-Sol may re-plan automatically while the user's goal, total authorization, and
-do-not-touch boundaries remain unchanged, no new dangerous or irreversible
-operation, credential, or user decision is needed, and no ownership conflict is
-created. Files already written retain their owner; unwritten files may be
-reassigned by the re-plan. A new authorization, credential, dangerous operation,
-explicitly excluded path, or legally unresolved ownership is a true `BLOCKED`
-condition.
+Sol may re-plan automatically while the original goal, `done_when`, total
+authorization, `do_not_touch`, permission, ownership, and user instructions
+remain unchanged, no new dangerous or irreversible operation, credential, or
+user decision is needed, and no ownership conflict is created. Files already
+written retain their owner; unwritten files may be reassigned by the re-plan. A
+new authorization, credential, dangerous operation, explicitly excluded path,
+or legally unresolved ownership is a true `BLOCKED` condition.
 
 User urgency, requests to hurry, or saying "do not stop" cannot lower, relax,
 or reduce the evidence or verification threshold. The evidence threshold

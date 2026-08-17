@@ -254,8 +254,46 @@ class RepositoryContractTests(unittest.TestCase):
         )
         self.assertRegex(
             text,
-            r"(?is)(?:cannot be safely inferred|new authorization|scope.{0,40}ownership).{0,180}BLOCKED",
+            r"(?is)independent execution blockers.{0,160}BLOCKED",
         )
+
+    def test_workers_classify_packet_sufficiency_and_sol_owns_repairability(self) -> None:
+        worker_texts = [read_if_present(LUNA_AGENT), read_if_present(TERRA_AGENT)]
+        worker_markers = (
+            "worker only judges whether",
+            "required field is missing, incomplete, or contradictory",
+            "execution boundary determinable",
+            "do not write, guess, or broaden scope",
+            "return FIX with the concrete packet defect",
+            "do not decide whether Sol can repair or re-plan",
+            "do not return BLOCKED for that packet defect",
+            "independent execution blocker after packet sufficiency",
+        )
+        for worker_text in worker_texts:
+            for marker in worker_markers:
+                self.assertIn(marker.lower(), worker_text.lower())
+            self.assertNotIn("when Sol can repair", worker_text)
+
+        sol_text = read_if_present(SOL_AGENT)
+        self.assertRegex(
+            sol_text,
+            r"(?is)compare the original goal, done_when, total authorization, do_not_touch, permission, ownership, and user instructions",
+        )
+        self.assertRegex(
+            sol_text,
+            r"(?is)fresh corrected packet.{0,100}redispatch.{0,100}otherwise Sol returns BLOCKED",
+        )
+
+        shared_text = "\n".join(
+            read_if_present(path)
+            for path in (
+                SKILL_ROOT / "SKILL.md",
+                SKILL_ROOT / "references" / "orchestration.md",
+                SKILL_ROOT / "references" / "runtime-notes.md",
+            )
+        )
+        self.assertIn("worker judges only packet sufficiency", shared_text)
+        self.assertIn("Sol owns the final repairability decision", shared_text)
 
     def test_stale_evidence_requires_fix_reverification_and_never_passes(self) -> None:
         text = self.contract_text()

@@ -124,13 +124,13 @@ Expected result: <observable acceptance condition>
 Verification: <exact command or procedure and passing condition>
 ```
 
-If a required field is missing or scope is incomplete, Luna or Terra returns
-`FIX` without writing when Sol can repair the packet inside the original goal,
-authorization, `do_not_touch`, and permission boundary; the worker must never
-guess. Sol repairs or re-plans and may redispatch. Return `BLOCKED` only when
-the defect cannot be safely inferred, requires new authorization, or leaves
-scope/ownership unresolved. An absent dependency or unproved authorization is
-still `BLOCKED`.
+If a required field is missing, incomplete, or contradictory, or the packet does
+not make the execution boundary determinable, Luna or Terra returns `FIX` with
+the concrete packet defect without writing, guessing, or broadening scope. The
+worker judges only packet sufficiency and does not decide whether Sol can repair
+or re-plan within total authorization; a packet defect is not worker `BLOCKED`.
+Independent execution blockers after packet sufficiency, such as an absent
+dependency or unproved authorization, remain `BLOCKED`.
 
 ## 6. Shared execution result
 
@@ -225,13 +225,19 @@ unsuccessful repairs, return `BLOCKED`. An identical packet with no new evidence
 is not relaunched and is `BLOCKED`. The `none` failure class means no failure;
 any failure uses another class.
 
+If a worker returns `FIX` for a packet defect, Sol owns the final repairability
+decision. Sol compares the original goal, `done_when`, total authorization,
+`do_not_touch`, permission, ownership, and user instructions. When those
+constraints safely determine a correction, Sol issues a fresh corrected packet
+and redispatches it to the same owner; otherwise Sol returns `BLOCKED`.
+
 If the evidence shows that the decomposition—not the implementation—is wrong,
-Sol may automatically re-plan within the original authorization when the final
-goal is unchanged, no dangerous or irreversible operation, credential, or new
-user decision is needed, and no explicit `do_not_touch` boundary is violated.
-Files already written retain their owner; unwritten files may be reassigned.
-New authorization, credentials, dangerous operations, excluded paths, or an
-unresolvable ownership conflict are true `BLOCKED` conditions.
+Sol may automatically re-plan within the same unchanged constraints when no
+dangerous or irreversible operation, credential, or new user decision is needed
+and no explicit `do_not_touch` boundary is violated. Files already written
+retain their owner; unwritten files may be reassigned. New authorization,
+credentials, dangerous operations, excluded paths, or an unresolvable ownership
+conflict are true `BLOCKED` conditions.
 
 User urgency, requests to hurry, or saying "do not stop" cannot lower, relax, or
 reduce the evidence or verification threshold. The evidence threshold remains
