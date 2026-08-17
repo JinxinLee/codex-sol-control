@@ -151,6 +151,16 @@ repair or re-plan the packet within total authorization, and it does not return
 `BLOCKED` for that packet defect. Independent execution blockers after packet
 sufficiency remain `BLOCKED`.
 
+A packet-sufficiency `FIX` raised before any worker write or substantive
+implementation is a controller-level packet correction, not a focused worker
+repair. Keep `Repair attempt: 0`; it does not consume the three focused worker
+repair attempts. If Sol corrects only packet fields while task decomposition,
+write scope, and ownership remain unchanged, redispatch the corrected packet to
+the same owner. If the defect requires an authorized re-plan, apply the
+existing ownership rule: written files retain their owner and unwritten files
+may be reassigned. After substantive execution begins, implementation defects
+use `Attempt: 1 | 2 | 3` in the bounded repair loop.
+
 ## Shared execution result
 
 ```text

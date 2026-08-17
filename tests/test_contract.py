@@ -281,7 +281,7 @@ class RepositoryContractTests(unittest.TestCase):
         )
         self.assertRegex(
             sol_text,
-            r"(?is)fresh corrected packet.{0,100}redispatch.{0,100}otherwise Sol returns BLOCKED",
+            r"(?is)fresh corrected packet.*redispatch.*otherwise Sol returns BLOCKED",
         )
 
         shared_text = "\n".join(
@@ -294,6 +294,38 @@ class RepositoryContractTests(unittest.TestCase):
         )
         self.assertIn("worker judges only packet sufficiency", shared_text)
         self.assertIn("Sol owns the final repairability decision", shared_text)
+
+    def test_packet_correction_stays_attempt_zero_and_replan_uses_existing_ownership(self) -> None:
+        text = self.contract_text()
+        normalized = " ".join(text.split())
+        for marker in (
+            "packet-sufficiency `FIX`",
+            "before any worker write or substantive implementation",
+            "controller-level packet correction",
+            "Repair attempt: 0",
+            "does not consume the three focused worker repair attempts",
+            "task decomposition, write scope, and ownership remain unchanged",
+            "redispatch the corrected packet to the same owner",
+            "authorized re-plan",
+            "written files retain their owner",
+            "unwritten files may be reassigned",
+            "Attempt: 1 | 2 | 3",
+        ):
+            self.assertIn(marker, normalized, marker)
+
+        sol_text = read_if_present(SOL_AGENT)
+        self.assertRegex(
+            sol_text,
+            r"(?is)packet-sufficiency FIX before any worker write or substantive implementation.*Repair attempt: 0.*do not consume the three focused worker repair attempts",
+        )
+        self.assertRegex(
+            sol_text,
+            r"(?is)only packet fields change.*task decomposition, write scope, and ownership remain unchanged.*same owner",
+        )
+        self.assertRegex(
+            sol_text,
+            r"(?is)authorized re-plan.*written files retain their owner and unwritten files may be reassigned",
+        )
 
     def test_stale_evidence_requires_fix_reverification_and_never_passes(self) -> None:
         text = self.contract_text()

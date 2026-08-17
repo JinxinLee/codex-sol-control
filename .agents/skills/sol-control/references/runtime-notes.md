@@ -182,6 +182,15 @@ user instructions. When those constraints safely determine a correction, Sol
 issues a fresh corrected packet and redispatches it to the same owner; otherwise
 Sol returns `BLOCKED`.
 
+A packet-sufficiency `FIX` raised before any worker write or substantive
+implementation is a controller-level packet correction, not a focused worker
+repair. Keep `Repair attempt: 0`; it does not consume the three focused worker
+repair attempts. If only packet fields change and task decomposition, write
+scope, and ownership remain unchanged, redispatch to the same owner. If an
+authorized re-plan is required, written files retain their owner and unwritten
+files may be reassigned. Implementation defects after substantive execution use
+`Attempt: 1 | 2 | 3`.
+
 Correction packets retain the original owner and scope. Their Failure class is
 one of `runtime | model_identity | permission | dependency | scope | verification |
 conflict | none`, and they include `Attempt: 1 | 2 | 3`, a same-scope Delta,
