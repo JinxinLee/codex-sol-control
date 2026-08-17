@@ -140,8 +140,8 @@
     },
     "required_assertions": [
       "Sol review can return FIX",
-      "at most one focused fix is issued",
-      "a second failure becomes BLOCKED"
+      "up to three focused repairs are issued only with measurable progress",
+      "unchanged core failure can stop early or three unsuccessful repairs become BLOCKED"
     ]
   },
   {
@@ -470,7 +470,7 @@
   },
   {
     "id": "luna-first-failure-after-write-keeps-luna-owner",
-    "prompt": "$sol-control: Luna fails after writing an owned file; keep all ownership with Luna for one focused fix or return BLOCKED, never transfer that file to Terra.",
+    "prompt": "$sol-control: Luna fails after writing an owned file; keep all ownership with Luna for up to three bounded repairs or return BLOCKED, never transfer that file to Terra.",
     "expected": {
       "route": "sol_then_luna",
       "sol": "required",
@@ -480,7 +480,7 @@
       "capacity": "live",
       "resume": "not_applicable",
       "ownership": "luna_retains_scope",
-      "correction": "focused_fix_or_blocked"
+      "correction": "bounded_repair_or_blocked"
     },
     "luna_state": {
       "failed_before_owned_write": false,
@@ -490,8 +490,8 @@
       "Luna wrote an owned file before the first failure",
       "Luna retains all ownership of the written file and scope",
       "Terra is blocked and cannot receive the already-written file",
-      "only the original Luna owner may receive one focused fix",
-      "a second failure or failed focused fix is BLOCKED"
+      "only the original Luna owner may receive bounded repairs",
+      "three unsuccessful repairs or an unchanged core failure is BLOCKED"
     ]
   },
   {

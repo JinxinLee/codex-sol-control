@@ -195,7 +195,7 @@ You do not need to choose a worker count or decide which tasks belong to Terra o
 | Every task uses the highest-cost model | Execution is routed to Terra or Luna according to complexity |
 | Multiple executors touch shared files | **One file, one owner**; overlapping work runs sequentially |
 | “Done” is reported without inspectable proof | Results must include changed paths, diff, tests, builds, or artifacts |
-| A failed task is retried indefinitely | One bounded correction is allowed; otherwise it becomes `BLOCKED` |
+| A failed task is retried indefinitely | Up to three evidence-backed bounded repairs; `BLOCKED` only after no convergence |
 
 The goal is not a noisy multi-agent team. It is a clear, auditable control plane for complex work.
 
@@ -266,7 +266,7 @@ No fixed worker count is promised. Sol launches the minimum useful number of exe
 2. **Execute.** Terra or Luna changes only the assigned scope and does not rewrite the overall plan.
 3. **Self-check.** The executor runs required verification and returns real changed paths, diff, tests, builds, or artifact evidence.
 4. **Review.** Sol inspects real files, the complete diff, evidence freshness, and requirement coverage.
-5. **Decide.** Sol returns `PASS`, one focused `FIX`, or `BLOCKED`.
+5. **Decide.** Sol returns `PASS`, an evidence-backed `FIX` continuation, or `BLOCKED`.
 
 A worker `PASS` applies only to its bounded task. Only Sol may approve the overall work.
 
@@ -276,7 +276,7 @@ A worker `PASS` applies only to its bounded task. Only Sol may approve the overa
 2. **Executors do not create subagents.** Terra and Luna are leaf nodes.
 3. **No evidence, no completion.** Transport / spawn `completed` proves delivery only.
 4. **Verification binds to the final candidate.** A later file change invalidates stale evidence.
-5. **At most one focused fix.** The original owner repairs the original scope once; another failure becomes `BLOCKED`.
+5. **At most three bounded repairs.** The original owner keeps the original scope; each repair needs a new `Delta` and measurable `Progress`, may stop early when unchanged, and reaches `BLOCKED` only after three unsuccessful repairs.
 6. **Fail closed.** The runtime does not silently substitute an unprovable custom agent, exact model, reasoning effort, or permission profile.
 7. **Review standards do not fall.** Urgency, parallelism, or cost goals never replace verification and evidence.
 
@@ -286,15 +286,15 @@ Only when Luna's first failure occurs **before** it writes any owned file may So
 
 The gate is only Luna's zero-write state before its first failure; Terra's write state is not the gate.
 
-After Luna writes an owned file, it retains ownership for the run. Sol may issue one focused fix to the original Luna owner, but it may not hand the already-written file to Terra for replacement.
+After Luna writes an owned file, it retains ownership for the run. Sol may issue bounded repairs only to the original Luna owner, and may not hand the already-written file to Terra for replacement. If decomposition is the problem and the goal, authorization, and do-not-touch boundaries are unchanged, Sol may automatically re-plan; written files keep their owner and unwritten files may be reassigned.
 
 ## Review outcomes
 
 | Verdict | Meaning |
 | --- | --- |
 | `PASS` | Every completion criterion is supported by real files and fresh evidence |
-| `FIX` | The original owner can make one focused correction without expanding scope |
-| `BLOCKED` | Permissions, dependencies, runtime identity, scope, conflicts, or verification prevent a trustworthy delivery |
+| `FIX` | Ordinary development failures continue through up to three same-owner, same-scope evidence-backed repairs |
+| `BLOCKED` | A true stop: missing permission, credentials, dependencies, provable identity, compatible requirements, or legal ownership |
 
 ## When not to use it
 

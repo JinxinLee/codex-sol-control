@@ -235,13 +235,13 @@ contract_patterns = (
     r"(?m)^\s*Expected result:\s*",
     r"(?m)^\s*Verification:\s*",
     r"(?i)Context:\s*.*optional",
-    r"(?m)^\s*Status:\s*PASS\s*\|\s*BLOCKED\s*$",
+    r"(?m)^\s*Status:\s*PASS\s*\|\s*FIX\s*\|\s*BLOCKED\s*$",
     r"(?m)^\s*Summary:\s*",
     r"(?m)^\s*Changed:\s*",
     r"(?m)^\s*Evidence:\s*",
     r"(?m)^\s*Blocker:\s*",
     r"(?i)PASS\s*\|\s*FIX\s*\|\s*BLOCKED",
-    r"(?i)at\s+most\s+one[^\n]*(?:focused\s+)?fix",
+    r"(?i)at\s+most\s+three[^\n]*(?:focused\s+)?repair",
 )
 for pattern in contract_patterns:
     if not re.search(pattern, contract_text):

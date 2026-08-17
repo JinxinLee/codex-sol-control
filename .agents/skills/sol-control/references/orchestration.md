@@ -23,7 +23,9 @@ Sol is the only controller and final reviewer; this is not a permanent agent
 team. Route Luna Max only to clear, low-ambiguity, falsifiable, small context,
 mechanical, or high-throughput work. Route Terra High to cross-module work,
 long-context investigation, ambiguous debugging, shared interface judgment, or
-high-risk implementation. Terra never plans or approves the overall task.
+high-risk implementation. When those traits are visible at planning time, route
+directly to Terra rather than trialing Luna first to reduce cost. Terra never
+plans or approves the overall task.
 
 Before task execution or any write, combine the authoritative Host/tool role
 mapping, parent launch record, and child's permission/no-side-effect handshake
@@ -122,14 +124,25 @@ contradictory, a dependency is absent, or authorization cannot be proved.
 
 ```text
 Task ID: <task id>
-Status: PASS | BLOCKED
+Status: PASS | FIX | BLOCKED
 Summary: <what happened>
 Changed: <exact files, or None>
 Verification: <commands, exit status, and concise output>
 Evidence: <diff, test, build, log, or artifact location bound to the final candidate>
+Repair attempt: 0 | 1 | 2 | 3
+Progress: <evidence-based comparison with the previous result, or None>
 Failure class: runtime | model_identity | permission | dependency | scope | verification | conflict | none
 Blocker: <None or the concrete blocker>
 ```
+
+`FIX` is an internal continuation state. Ordinary development failures such as
+failed tests, builds, compilation or type checks, incomplete implementation,
+missing regression coverage, wrong fields, or incorrect CLI behavior enter
+`FIX`. `BLOCKED` is reserved for a true stop: missing permission,
+authorization, credentials, or required dependencies; unprovable model
+identity; contradictory requirements; legally unresolvable ownership; or an
+unauthorized scope expansion. `BLOCKED` means unable to continue, not merely
+unfinished.
 
 `PASS` requires every assigned acceptance condition and verification to be
 evidenced. Luna or Terra approves only its bounded task; neither approves the
@@ -141,7 +154,7 @@ verification, the old evidence is stale and affected verification must be rerun.
 Do not add a top-level `Candidate` field to the worker result.
 
 Transport/spawn `completed` only proves delivery lifecycle completion. It cannot
-substitute for a structured Luna `PASS` or Terra `PASS` (that is, a structured worker `PASS`), Verification/Evidence/changed-path proof,
+substitute for a structured Luna `PASS` or internal `FIX`, or a structured Terra `PASS` or internal `FIX`, Verification/Evidence/changed-path proof,
 or Sol review.
 
 If transport/spawn reports `completed` without a structured result, allow exactly
@@ -170,25 +183,39 @@ criterion, or a failed command.
 Only when Luna's first failure happens before Luna writes any owned file may Sol
 perform one bounded escalation of the same task and unchanged scope to Terra
 instead of unbounded Luna retries. If Luna has written any owned file before
-failing, Luna retains all ownership; only the original Luna owner may receive
-one focused fix, otherwise return `BLOCKED`. Terra's write state is never the
-escalation gate. The packet, authorization boundary, evidence freshness,
-correction rules, and scope remain unchanged.
+failing, Luna retains all ownership; Terra never replaces that owner. Terra's
+write state is never the escalation gate. The packet, authorization boundary,
+evidence freshness, correction rules, and scope remain unchanged.
 
-## 8. Focused fix
+## 8. Bounded repair and authorized re-plan
 
-At most one focused fix is allowed for a task:
+An ordinary defect enters a bounded repair loop of at most three focused repairs:
 
 ```text
 Task ID: <original-id>-fix
+Attempt: <1|2|3>
+Failure class: <runtime|model_identity|permission|dependency|scope|verification|conflict>
 Issue: <observed defect and evidence>
-Required correction: <smallest authorized repair>
+Delta: <new same-scope instruction or new evidence; never an unchanged prompt>
+Expected progress: <measurable change expected in the next verification>
 Scope: <the original owner's unchanged write scope>
 Verification: <exact regression command or procedure>
+Progress: <evidence-based comparison after the repair, or None before it runs>
 ```
 
-The same owner performs the fix. A second failure, expanded scope, or new owner
-conflict becomes `BLOCKED`; do not retry indefinitely.
+The same owner performs every repair. Continue only when verification shows
+material progress; stop early when the core failure is unchanged. After three
+unsuccessful repairs, return `BLOCKED`. An identical packet with no new evidence
+is not relaunched and is `BLOCKED`. The `none` failure class means no failure;
+any failure uses another class.
+
+If the evidence shows that the decomposition—not the implementation—is wrong,
+Sol may automatically re-plan within the original authorization when the final
+goal is unchanged, no dangerous or irreversible operation, credential, or new
+user decision is needed, and no explicit `do_not_touch` boundary is violated.
+Files already written retain their owner; unwritten files may be reassigned.
+New authorization, credentials, dangerous operations, excluded paths, or an
+unresolvable ownership conflict are true `BLOCKED` conditions.
 
 User urgency, requests to hurry, or saying "do not stop" cannot lower, relax, or
 reduce the evidence or verification threshold. The evidence threshold remains

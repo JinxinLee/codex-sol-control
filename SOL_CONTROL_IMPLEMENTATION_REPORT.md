@@ -15,7 +15,7 @@ User goal
      -> Luna Max for clear, low-ambiguity, falsifiable execution
      -> Terra High for cross-module, long-context, ambiguous, or high-risk execution
   -> Sol reviews real files, diff, tests, build, and evidence
-  -> PASS, one focused FIX, or BLOCKED
+  -> PASS, evidence-backed FIX repairs (up to three), or BLOCKED
 ```
 
 Sol is the only controller. Terra High and Luna Max are leaf executors: neither may create
@@ -45,7 +45,8 @@ Adopted:
 - precise task packets, one-file-one-owner, dependency stages, and live-capacity batching;
 - model and reasoning-effort identity checks with fail-closed behavior;
 - executor self-checks plus Sol review of real files and fresh evidence;
-- at most one focused correction and resumable state for long work.
+- up to three same-owner, same-scope evidence-backed corrections and resumable
+  state for long work.
 
 Rejected:
 
@@ -65,7 +66,8 @@ Rejected:
 
 Luna may be upgraded to Terra exactly once only when Luna's first failure occurs before the first
 write to an owned file. Terra's write state is never the escalation gate. After a write, Luna keeps
-ownership and may receive one focused fix; otherwise the task is blocked.
+ownership and may receive up to three evidence-backed repairs; unchanged core
+failure or exhausted repair budget is blocked.
 
 ## 5. Native Nested and Compatibility
 

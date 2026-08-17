@@ -30,7 +30,7 @@ repository, global agent file, or live production system is read or modified.
   forbidden handoff: only when Luna's first failure happens before Luna writes
   any owned file may Sol forward the same task and unchanged scope to Terra
   once. If Luna has written any owned file before failing, Luna retains all
-  ownership; only the original Luna owner may receive one focused fix, otherwise
+  ownership; only the original Luna owner may receive up to three bounded repairs, otherwise
   return `BLOCKED`. Terra's write state is never the escalation gate.
 - Installer tests use a temporary `ORCHESTRATE_HOME`, synthesize a v0.1
   installation with checksums, and exercise migration, modified-target
@@ -50,7 +50,7 @@ repository, global agent file, or live production system is read or modified.
 | Shared integration file | `sol_then_luna` | one owner for the shared file | PASS |
 | Incomplete Luna packet | `sol_then_luna` | BLOCKED before write | BLOCKED |
 | Unprovable exact selection | `blocked` | BLOCKED | BLOCKED |
-| One missed criterion | `sol_then_luna` | one focused fix at most | FIX |
+| One missed criterion | `sol_then_luna` | up to three evidence-backed repairs | FIX |
 | Dirty worktree | `sol_then_luna` | scoped writes only | PASS |
 | Stale evidence after candidate change | `sol_then_luna` | BLOCKED until affected verification reruns | BLOCKED |
 | Transport/spawn `completed` | `sol_then_luna` | delivery only; structured result required | BLOCKED |
@@ -68,7 +68,7 @@ repository, global agent file, or live production system is read or modified.
 | Terra: cross-module and long context | `sol_then_terra` | no Luna; Terra required | PASS |
 | Model identity unavailable | `blocked` | Luna and Terra BLOCKED; no substitution | BLOCKED |
 | Luna first classification failure before any write | `sol_then_terra` | same task/scope upgraded once only after zero Luna-owned writes | PASS |
-| Luna first failure after an owned write | `sol_then_luna` | Luna retains scope; one focused fix or `BLOCKED`; Terra blocked | FIX/BLOCKED |
+| Luna first failure after an owned write | `sol_then_luna` | Luna retains scope; up to three bounded repairs or `BLOCKED`; Terra blocked | FIX/BLOCKED |
 | Shared file unique owner with Terra route | `sol_then_terra` | exact write scope; one owner | PASS |
 
 ## Reliability guard status

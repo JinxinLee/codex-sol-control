@@ -17,9 +17,11 @@ implementation and it does not grant permission to edit the legacy targets.
 - Sol emits only `goal`, `done_when`, `tasks`, and `stages` as its plan shape.
 - Every Luna task has `Task ID`, `Task`, `Write scope`, optional `Context`,
   `Do not touch`, `Expected result`, and `Verification`.
-- Every Luna result has `Task ID`, `Status: PASS | BLOCKED`, `Summary`,
-  `Changed`, `Verification`, `Evidence`, and `Blocker`.
-- Sol review uses `PASS | FIX | BLOCKED` and permits at most one focused fix.
+- Every Luna result has `Task ID`, `Status: PASS | FIX | BLOCKED`, `Summary`,
+  `Changed`, `Verification`, `Evidence`, `Repair attempt`, `Progress`, and
+  `Blocker`.
+- Sol review uses `PASS | FIX | BLOCKED` and permits up to three evidence-backed
+  focused repairs, with early stop on unchanged core failure.
 - Exact model/reasoning-effort proof, inherited permissions, and Fail Closed
   remain runtime requirements; runtime mechanics stay in `runtime-notes.md`.
 - One file has one owner, shared integration files have one Luna owner, and

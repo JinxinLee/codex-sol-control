@@ -368,7 +368,7 @@ class ForwardCaseContractTests(unittest.TestCase):
         self.assertEqual("luna_retains_scope", forbid["expected"]["ownership"])
         self.assertEqual(1, forbid["luna_state"]["owned_files_written_before_failure"])
         self.assertFalse(forbid["luna_state"]["failed_before_owned_write"])
-        self.assertEqual("focused_fix_or_blocked", forbid["expected"]["correction"])
+        self.assertEqual("bounded_repair_or_blocked", forbid["expected"]["correction"])
 
         assertion_text = " ".join(
             assertion

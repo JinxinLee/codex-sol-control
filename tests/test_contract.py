@@ -216,11 +216,11 @@ class RepositoryContractTests(unittest.TestCase):
 
     def test_luna_result_and_sol_review_contracts_are_falsifiable(self) -> None:
         text = self.contract_text()
-        for field in ["Task ID", "Status", "Summary", "Changed", "Verification", "Evidence", "Blocker"]:
+        for field in ["Task ID", "Status", "Summary", "Changed", "Verification", "Evidence", "Repair attempt", "Progress", "Blocker"]:
             self.assertRegex(text, rf"(?m)^\s*{re.escape(field)}:\s*", field)
-        self.assertRegex(text, r"(?m)^\s*Status:\s*PASS\s*\|\s*BLOCKED\s*$")
+        self.assertRegex(text, r"(?m)^\s*Status:\s*PASS\s*\|\s*FIX\s*\|\s*BLOCKED\s*$")
         self.assertRegex(text, r"(?i)PASS\s*\|\s*FIX\s*\|\s*BLOCKED")
-        self.assertRegex(text, r"(?i)at\s+most\s+one[^\n]*(focused\s+)?fix")
+        self.assertRegex(text, r"(?i)at\s+most\s+three[^\n]*(focused\s+)?repair")
 
     def test_v040_evidence_binds_final_candidate_and_invalidates_stale_evidence(self) -> None:
         text = self.contract_text()
@@ -551,7 +551,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertFalse(forbid["luna_state"]["failed_before_owned_write"])
         self.assertEqual("blocked", forbid["expected"]["terra"])
         self.assertEqual("luna_retains_scope", forbid["expected"]["ownership"])
-        self.assertEqual("focused_fix_or_blocked", forbid["expected"]["correction"])
+        self.assertEqual("bounded_repair_or_blocked", forbid["expected"]["correction"])
 
     def test_public_skill_has_no_unrelated_brand_or_model_contamination(self) -> None:
         combined = "\n".join(

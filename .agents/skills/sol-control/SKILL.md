@@ -38,6 +38,8 @@ a permanent agent team.
   falsifiable, small context, mechanical, or high-throughput.
 - Route to **Terra High** for cross-module work, long-context investigation,
   ambiguous debugging, shared interface judgment, or high-risk implementation.
+  When these traits are visible at planning time, route directly to Terra; do
+  not trial Luna first merely to reduce cost.
 - Start every custom agent with a fresh context: set `fork_turns="none"` and use
   the first turn only as an identity handshake. The authoritative Host/tool
   contract plus the parent launch record must prove the selected `agent_type`,
@@ -59,10 +61,9 @@ a permanent agent team.
   send the task: **Fail Closed** and return `BLOCKED`.
 - One file has one owner for the whole run. Only when Luna's first failure
   happens before Luna writes any owned file may Sol escalate the same task and
-  unchanged scope to Terra once, rather than retrying Luna indefinitely. If
-  Luna has written any owned file before failing, Luna retains all ownership;
-  only the original Luna owner may receive one focused fix, otherwise return
-  `BLOCKED`. Terra's write state is never the escalation gate.
+  unchanged scope to Terra once. If Luna has written any owned file before
+  failing, Luna retains all ownership; Terra never replaces that owner. Terra's
+  write state is never the escalation gate.
 
 ## Workflow
 
@@ -144,21 +145,33 @@ not guess the missing scope.
 
 ```text
 Task ID: <task id>
-Status: PASS | BLOCKED
+Status: PASS | FIX | BLOCKED
 Summary: <what happened>
 Changed: <exact files, or None>
 Verification: <commands and exact results>
 Evidence: <diff, test, build, log, or artifact evidence bound to the final candidate>
+Repair attempt: 0 | 1 | 2 | 3
+Progress: <evidence-based comparison with the previous result, or None>
 Failure class: runtime | model_identity | permission | dependency | scope | verification | conflict | none
 Blocker: <None or the concrete blocker>
 ```
+
+`FIX` is an internal continuation state, not a final delivery. Ordinary
+development failures—failed tests, builds, compilation or type checks,
+incomplete implementation, missing regression coverage, wrong fields, or
+incorrect CLI behavior—are `FIX`, not `BLOCKED`. `BLOCKED` means that work
+cannot continue: permission or authorization is missing, required credentials
+or dependencies are unavailable, model identity cannot be proved, requirements
+conflict, ownership cannot be resolved legally, or continuing would expand
+scope without authorization. Do not use `BLOCKED` merely because the work is
+unfinished.
 
 Evidence must bind to the final candidate identity, represented by a commit+diff
 identity or an exact changed-file snapshot. If the candidate changes after
 verification, prior evidence is stale and affected verification must be rerun
 before `PASS`. A top-level `Candidate` result field is not added.
 
-transport/spawn `completed` only proves delivery lifecycle completion; it cannot substitute for a structured Luna `PASS` or Terra `PASS` (that is, a structured worker `PASS`), Verification/Evidence/changed-path proof, or Sol review.
+transport/spawn `completed` only proves delivery lifecycle completion; it cannot substitute for a structured Luna `PASS` or internal `FIX`, or a structured Terra `PASS` or internal `FIX`, Verification/Evidence/changed-path proof, or Sol review.
 
 If transport/spawn reports `completed` without a structured result, allow
 exactly one result-only follow-up to the same worker. This result-only follow-up
@@ -166,8 +179,8 @@ authorizes no new write and no re-execution. If it still cannot retrieve a
 structured result bound to the final candidate, return `BLOCKED`; do not launch
 another retrieval.
 
-The worker may return `PASS` for its assigned task only. Sol decides whether the
-overall work is complete.
+The worker may return `PASS` or internal `FIX` for its assigned task only. Sol
+decides whether the overall work is complete.
 
 ## Scheduling and ownership
 
@@ -182,16 +195,27 @@ overall work is complete.
 ## Review and correction
 
 Sol returns `PASS | FIX | BLOCKED`. Evidence-free `PASS`, out-of-scope writes,
-failed verification, conflicts, or missed criteria cannot pass review. Sol may
-issue at most one focused fix to the original owner without expanding its write
-scope. A second failure is `BLOCKED`.
+failed verification, conflicts, or missed criteria cannot pass review. A normal
+defect enters a bounded repair loop of at most three focused repairs. Every
+repair keeps the original owner and original write scope, and must be based on
+new verification evidence rather than a repeated prompt. Continue only when
+there is material progress; stop early when the core failure is unchanged. After
+three unsuccessful repairs, return `BLOCKED`.
 
 Every Correction Packet keeps the original owner and original scope, and contains
 `Failure class: runtime | model_identity | permission | dependency | scope | verification | conflict | none`
-plus a `Delta` that changes the same-scope task packet or adds new evidence. The
-`none` class is valid only when no failure occurred; any failure uses another
-allowed class. The same task packet with no new evidence is `BLOCKED` and must
-not be relaunched.
+plus `Attempt: 1 | 2 | 3`, a same-scope `Delta`, `Expected progress`, and the
+latest `Progress` comparison. The `none` class means no failure occurred; any
+failure uses another allowed class. The same task packet with no new evidence is `BLOCKED` and is not relaunched.
+
+If the failure shows that the decomposition—not the implementation—is wrong,
+Sol may re-plan automatically while the user's goal, total authorization, and
+do-not-touch boundaries remain unchanged, no new dangerous or irreversible
+operation, credential, or user decision is needed, and no ownership conflict is
+created. Files already written retain their owner; unwritten files may be
+reassigned by the re-plan. A new authorization, credential, dangerous operation,
+explicitly excluded path, or legally unresolved ownership is a true `BLOCKED`
+condition.
 
 User urgency, requests to hurry, or saying "do not stop" cannot lower, relax,
 or reduce the evidence or verification threshold. The evidence threshold

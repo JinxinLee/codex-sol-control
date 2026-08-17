@@ -11,7 +11,7 @@ plan and returns the results to Sol for review. The Host is a technical
 dispatcher, not a third orchestration role; all task count, ownership, stage,
 and review decisions remain Sol's.
 
-transport/spawn `completed` only proves delivery lifecycle completion. It cannot substitute for a structured Luna `PASS` or Terra `PASS` (that is, a structured worker `PASS`), Verification/Evidence/changed-path proof, or Sol review.
+transport/spawn `completed` only proves delivery lifecycle completion. It cannot substitute for a structured Luna `PASS` or internal `FIX`, or a structured Terra `PASS` or internal `FIX`, Verification/Evidence/changed-path proof, or Sol review.
 
 ## Execution continuity and host recovery
 
@@ -100,12 +100,13 @@ accidentally.
 Luna is only for clear, low-ambiguity, falsifiable,
 small context, mechanical, or high-throughput work; Terra is for cross-module,
 long-context, ambiguous-debugging, shared interface, or high-risk implementation
-work. Only when Luna's first failure happens before Luna writes any owned file
-may Sol perform one bounded escalation of the same task and unchanged scope to
-Terra rather than an unbounded Luna retry. If Luna has written any owned file
-before failing, Luna retains all ownership; only the original Luna owner may
-receive one focused fix, otherwise return `BLOCKED`. Terra's write state is
-never the escalation gate, and an already-written file is never reassigned.
+work. When those traits are visible at planning time, route directly to Terra;
+do not trial Luna first merely to reduce cost. Only when Luna's first failure
+happens before Luna writes any owned file may Sol perform one bounded escalation
+of the same task and unchanged scope to Terra rather than an unbounded Luna
+retry. If Luna has written any owned file before failing, Luna retains all
+ownership; Terra never replaces that owner. Terra's write state is never the
+escalation gate, and an already-written file is never reassigned.
 
 ## Capacity and batching
 
@@ -119,7 +120,8 @@ ownership decisions.
 For an implementation task, the worker packet should identify the smallest observable first artifact, such as creating the owned file, making the frozen
 RED test import the module, or producing one focused failing verification.
 The worker must reach that checkpoint within the Host's stated execution timebox or
-return `BLOCKED` with the concrete reason. Extended read-only analysis without
+return `FIX` with the concrete evidence gap; return `BLOCKED` only for a true
+stop condition. Extended read-only analysis without
 an owned artifact, command evidence, or blocker is not progress; the Host may
 interrupt the worker after the timebox and re-plan a smaller task through Sol.
 An interrupted worker that wrote no files leaves ownership available for a
@@ -127,11 +129,13 @@ fresh worker. If it wrote any file, ownership remains with that worker for the
 run and the Host must not silently reassign or overwrite it.
 
 A placeholder or skeleton satisfies only the first-artifact checkpoint; it does
-not prove functional implementation progress. The packet may define at most one
-bounded functional-delta checkpoint for the same owner and scope. If the
-original owner cannot produce that delta within the one allowed focused fix,
-return `BLOCKED`; do not create a second writer or transfer ownership after a
-write. The zero-write Luna-to-Terra escalation above remains the only exception.
+not prove functional implementation progress. The packet may define one
+bounded functional-delta checkpoint for the same owner and scope. Ordinary
+failures continue as `FIX` through at most three evidence-backed repairs by the
+same owner; stop early when the core failure is unchanged, and return `BLOCKED`
+after three unsuccessful repairs. Do not create a second writer or transfer
+ownership after a write. The zero-write Luna-to-Terra escalation above remains
+the only exception.
 
 ## Write safety
 
@@ -147,19 +151,22 @@ write. The zero-write Luna-to-Terra escalation above remains the only exception.
 - The Host verifies actual changed paths and command evidence before returning
   results to Sol.
 - Before dispatching a Sol `FIX`, the Host compares its proposed write scope,
-  permissions, and side effects with the original worker packet. Any new path or
-  authority makes the current task `BLOCKED`; continue through a separately
-  planned task instead of relabeling the expanded work as a focused fix.
+  permissions, and side effects with the original worker packet. A new path or
+  authority is not a focused repair: if the path is unwritten and the original
+  authorization still covers it, Sol may make a separate automatic re-plan;
+  otherwise the current task is `BLOCKED`.
 - Evidence must bind to the final candidate identity with a commit+diff identity
   or exact changed-file snapshot. If the candidate changes after verification,
   old evidence is stale and affected verification must be rerun before `PASS`.
 
 Correction packets retain the original owner and scope. Their Failure class is
 one of `runtime | model_identity | permission | dependency | scope | verification |
-conflict | none`, and their Delta is a same-scope task-packet change or new
-evidence. `none` is valid only when no failure occurred; any failure must use
-one of the other classes. An identical packet with no new evidence is `BLOCKED`
-and is not relaunched.
+conflict | none`, and they include `Attempt: 1 | 2 | 3`, a same-scope Delta,
+Expected progress, and a post-repair Progress comparison. The `none` failure
+class means no failure; any failure must use one of the other classes. An
+identical packet with no new evidence is not relaunched and is `BLOCKED`. `FIX`
+is for ordinary development defects; `BLOCKED` is only a true inability to
+continue.
 
 Resume packets are only for long, interrupted, or context-compressed tasks and
 contain `goal`, `completed`, `in_flight`, `artifact_location`, and `next_action`.

@@ -195,7 +195,7 @@ $sol-control 重构认证模块，保持现有 API 兼容，测试和构建必�
 | 所有工作都使用最高成本模型 | 按复杂度把执行路由到 Terra 或 Luna |
 | 多个执行者同时修改共享文件 | **一个文件，一个 owner**；重叠范围必须串行 |
 | “完成”只有口头总结，没有真实证据 | 必须返回 changed paths、diff、测试、构建或产物 |
-| 错误任务被无限重试 | 只允许一次有边界的修正，否则 `BLOCKED` |
+| 错误任务被无限重试 | 最多三次有进展的有边界修正；仍无法收敛才 `BLOCKED` |
 
 它的目标不是制造一个热闹的多 Agent 团队，而是为复杂任务建立一个清晰、可审核的控制面。
 
@@ -266,7 +266,7 @@ worker 数量没有固定承诺。Sol 根据依赖关系、实时容量和安全
 2. **执行。** Terra 或 Luna 只修改分配范围，不改整体计划。
 3. **自检。** 执行者运行指定验证并返回真实 changed paths、diff、测试、构建或产物证据。
 4. **审核。** Sol 检查真实文件、完整 diff、证据新鲜度和需求覆盖。
-5. **结论。** Sol 返回 `PASS`、一次 focused `FIX` 或 `BLOCKED`。
+5. **结论。** Sol 返回 `PASS`、基于证据继续的 `FIX` 或 `BLOCKED`。
 
 worker 的 `PASS` 只代表它自己的任务通过。只有 Sol 可以批准整体工作。
 
@@ -276,7 +276,7 @@ worker 的 `PASS` 只代表它自己的任务通过。只有 Sol 可以批准整
 2. **执行者不能创建子代理。** Terra 与 Luna 都是叶子节点。
 3. **没有证据，不算完成。** transport / spawn 的 `completed` 只表示投递结束。
 4. **验证必须绑定最终候选。** 验证后文件发生变化，旧证据立即失效。
-5. **最多一次 focused fix。** 原 owner 只能在原 scope 内修正一次；再次失败则 `BLOCKED`。
+5. **最多三次 bounded repair。** 原 owner 在原 scope 内最多修正三次；每次必须有新的 `Delta` 和可比较的 `Progress`，无进展可提前停止，三次仍失败才 `BLOCKED`。
 6. **失败关闭。** 无法证明 custom agent、精确 model、reasoning effort 或有效权限时，不静默替换。
 7. **不降低审核门槛。** 用户催促、并行需求或成本目标都不能替代验证与证据。
 
@@ -286,15 +286,15 @@ worker 的 `PASS` 只代表它自己的任务通过。只有 Sol 可以批准整
 
 升级门槛只看 Luna 首次失败前是否零写入；Terra 的写入状态不是门槛。
 
-一旦 Luna 已经写入 owned file，它保留该文件在本轮运行中的 ownership。Sol 只能把一次 focused fix 交回原 Luna owner，不能把已经写过的文件转交给 Terra 覆盖。
+一旦 Luna 已经写入 owned file，它保留该文件在本轮运行中的 ownership。Sol 只能把 bounded repair 交回原 Luna owner，不能把已经写过的文件转交给 Terra 覆盖。若问题是拆分不合理，且目标、授权和 do-not-touch 边界不变，Sol 可自动 re-plan；已写文件保留 owner，未写文件可以重新分配。
 
 ## 审核结果
 
 | 结果 | 含义 |
 | --- | --- |
 | `PASS` | 所有完成条件均由真实文件和新鲜证据支持 |
-| `FIX` | 原 owner 可以在不扩大 scope 的前提下完成一次精确修正 |
-| `BLOCKED` | 权限、依赖、运行时身份、scope、冲突或验证问题阻止可信交付 |
+| `FIX` | 普通开发失败进入原 owner、原 scope 的最多三次证据驱动修复 |
+| `BLOCKED` | 真实无法继续：缺少权限、凭据、依赖或可证明身份，需求矛盾，或 ownership 无法合法解决 |
 
 ## 什么时候不该使用
 
